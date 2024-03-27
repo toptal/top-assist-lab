@@ -1,31 +1,21 @@
 # ./main.py
-from confluence_integration.retrieve_space import get_space_content, choose_space
-from vector.chroma_threads import retrieve_relevant_documents
-from oai_assistants.query_assistant_from_documents import query_assistant_with_context
-from gpt_4t.query_from_documents_threads import query_gpt_4t_with_context
-from confluence_integration.extract_page_content_and_store_processor import get_page_content_using_queue
-from confluence_integration.extract_page_content_and_store_processor import embed_pages_missing_embeds
-from qa_syncup.sync_up_qa_articles_to_confluence import sync_up_interactions_to_confluence
-from slack.channel_interaction import load_slack_bot
-from datetime import datetime
-from database.space_manager import SpaceManager
-from vector.create_vector_db import add_embeds_to_vector_db
-from oai_assistants.openai_assistant import load_manage_assistants
-
+from confluence_integration.retrieve_space import choose_space
+from vector.chroma import retrieve_relevant_documents
+from open_ai.assistants.query_assistant_from_documents import query_assistant_with_context
+from open_ai.chat.query_from_documents import query_gpt_4t_with_context
+from slack.bot import load_slack_bot
+from open_ai.assistants.openai_assistant import load_manage_assistants
+from interactions.vectorize_and_store import vectorize_interactions_and_store_in_db
+from vector.create_interaction_db import VectorInteractionManager
+from interactions.identify_knowledge_gap import identify_knowledge_gaps
+from space.manager import Space
+from visualize.pages import load_confluence_pages_spacial_distribution
 
 def load_new_documentation_space():
     space_key, space_name = choose_space()
     if space_key and space_name:
-        print("Retrieving space content...")
-        get_space_content(space_key)
-        get_page_content_using_queue(space_key)
-        embed_pages_missing_embeds()
-        space_manager = SpaceManager()
-        last_import_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        space_manager.upsert_space_info(space_key, space_name, last_import_date)
-        add_embeds_to_vector_db()
-        print(f"\nSpace '{space_name}' retrieval and indexing complete.")
-    print("\nSpace retrieval and indexing complete.")
+        space = Space()
+        space.load_new(space_key, space_name)
 
 
 def answer_question_with_assistant(question):
@@ -46,9 +36,11 @@ def main_menu():
         print("1. Load New Documentation Space")
         print("2. Ask a Question to GPT-4T Assistant")
         print("3. Ask a question to GPT-4T")
-        print("4. Sync up QA articles to Confluence")
+        print("4. Create a vector db for interactions")
         print("5. Start Slack Bot")
         print("6. Manage assistants")
+        print("7. Identify knowledge gaps")
+        print("8. Visualize Confluence Pages Spacial Distribution")
         print("0. Cancel/Quit")
         choice = input("Enter your choice (0-6): ")
 
@@ -69,8 +61,10 @@ def main_menu():
                 print("\nAnswer:", answer)
 
         elif choice == "4":
-            print("Syncing up QA articles to Confluence...")
-            sync_up_interactions_to_confluence()
+            print("Creating vector db for interactions")
+            vectorize_interactions_and_store_in_db()
+            vector_interaction_manager = VectorInteractionManager()
+            vector_interaction_manager.add_to_vector()
 
         elif choice == "5":
             print("Starting Slack Bot Using Assistants and fast API...")
@@ -83,11 +77,19 @@ def main_menu():
         elif choice == "6":
             load_manage_assistants()
 
+        elif choice == "7":
+            context = input("Enter the context you want to identifying knowledge gaps in\nex:(billing reminders): ")
+            identify_knowledge_gaps(context)
+
+        elif choice == "8":
+            print("Starting 3D visualization process...")
+            load_confluence_pages_spacial_distribution()
+
         elif choice == "0":
             print("Exiting program.")
             break
         else:
-            print("Invalid choice. Please enter 0, 1, 2, 3, 4, 5 or 6.")
+            print("Invalid choice. Please enter 0, 1, 2, 3, 4, 5, 6 or 7.")
 
 
 def ask_question():

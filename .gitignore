@@ -1,11 +1,4 @@
 /.idea/
+/.env
 .DS_Store
 *.pyc
-/configuration.py
-/content/*
-/content.toptal.backup/*
-/backup/
-/environment.yml
-/debug/
-/chroma.log
-/.env

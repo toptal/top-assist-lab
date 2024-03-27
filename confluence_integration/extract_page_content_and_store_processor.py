@@ -1,15 +1,18 @@
 # ./confluence_integration/extract_page_content_and_store_processor.py
+# Part of loading documentation used to extract data from confluence and store it in the database
 import os
 import requests
-from persistqueue import Queue
-from file_system.file_manager import FileManager
-from database.nur_database import store_pages_data, is_page_processed, get_last_updated_timestamp
-from confluence_integration.retrieve_space import process_page
-from configuration import persist_page_processing_queue_path, persist_page_vector_queue_path
-from database.nur_database import get_page_ids_missing_embeds
 import time
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from configuration import api_host, api_port
+from configuration import persist_page_processing_queue_path, persist_page_vector_queue_path
+from persistqueue import Queue
+from file_system.file_manager import FileManager
+from database.page_manager import store_pages_data, is_page_processed, get_last_updated_timestamp
+from confluence_integration.retrieve_space import process_page
+from database.page_manager import get_page_ids_missing_embeds
+
 
 host = os.environ.get("NUR_API_HOST", api_host)
 port = os.environ.get("NUR_API_PORT", api_port)
@@ -115,14 +118,20 @@ def get_page_content_using_queue(space_key):
     page_content_map = {}
     page_processor = PageProcessor(file_manager, space_key)
 
-    while (page_id := process_page_queue.dequeue_page()) is not None:
+    def process_page_wrapper(page_id):
         logging.info(f"Processing page with ID {page_id}...")
         page_processor.process_page(page_id, page_content_map)
         vectorization_queue.enqueue_page(page_id)
-
         process_page_queue.task_done()
         logging.info(f"Page with ID {page_id} processing complete, added for vectorization.")
-    # iterate through the page_content_map and call the embed api the IDs list
+
+    # Create a ThreadPoolExecutor to manage concurrency
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        # Submit tasks to the executor as pages are dequeued
+        while (page_id := process_page_queue.dequeue_page()) is not None:
+            executor.submit(process_page_wrapper, page_id)
+
+    # After all threads are done, continue with the single-threaded part
     page_ids = [page_id for page_id in page_content_map.keys()]
     for page_id in page_ids:
         submit_embedding_creation_request(page_id)
@@ -130,7 +139,7 @@ def get_page_content_using_queue(space_key):
     store_pages_data(space_key, page_content_map)
 
 
-def embed_pages_missing_embeds(retry_limit: int = 3, wait_time: int = 30) -> None:
+def embed_pages_missing_embeds(retry_limit: int = 3, wait_time: int = 5) -> None:
     for attempt in range(retry_limit):
         # Retrieve the IDs of pages that are still missing embeddings.
         page_ids = get_page_ids_missing_embeds()
@@ -169,9 +178,4 @@ def embed_pages_missing_embeds(retry_limit: int = 3, wait_time: int = 30) -> Non
 if __name__ == "__main__":
     embed_pages_missing_embeds()
 
-    '''
-    space_key = choose_space()
-    logging.info(f"Script started for space key: {space_key}")
-    get_page_content_using_queue(space_key)
-    '''
 

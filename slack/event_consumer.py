@@ -8,10 +8,11 @@ from datetime import datetime
 from pydantic import BaseModel
 from slack_sdk import WebClient
 from credentials import slack_bot_user_oauth_token
-from vector.chroma_threads import retrieve_relevant_documents
-from database.nur_database import QAInteractionManager, Session, SlackMessageDeduplication
-from threads.dynamic_executor_assistants import DynamicExecutor
-from oai_assistants.query_assistant_from_documents import query_assistant_with_context
+from vector.chroma import retrieve_relevant_documents
+from open_ai.assistants.query_assistant_from_documents import query_assistant_with_context
+from database.interaction_manager import QAInteractionManager
+from gamification.score_manager import ScoreManager
+from slack_sdk.errors import SlackApiError
 
 
 class QuestionEvent(BaseModel):
@@ -30,29 +31,45 @@ class FeedbackEvent(BaseModel):
     user: str
 
 
+def get_user_name_from_id(slack_web_client, user_id):
+    try:
+        response = slack_web_client.users_info(user=user_id)
+        if response and response['user']['name']:
+            return response['user']['name']
+    except SlackApiError as e:
+        print(f"Error fetching user name: {e.response['error']}")
+    return None
+
+
 class EventConsumer:
     def __init__(self):
         self.web_client = WebClient(token=slack_bot_user_oauth_token)
-        self.db_session = Session()
-        self.interaction_manager = QAInteractionManager(self.db_session)
-        self.executor = DynamicExecutor()
+        self.interaction_manager = QAInteractionManager()
+        self.score_manager = ScoreManager()
         logging.log(logging.DEBUG, f"Slack Event Consumer initiated successfully")
 
     def is_message_processed_in_db(self, channel_id, message_ts):
-        return self.db_session.query(SlackMessageDeduplication).filter_by(channel_id=channel_id, message_ts=message_ts).first() is not None
+        return self.interaction_manager.is_message_processed(channel_id, message_ts)
 
     def record_message_as_processed_in_db(self, channel_id, message_ts):
-        dedup_record = SlackMessageDeduplication(channel_id=channel_id, message_ts=message_ts)
-        self.db_session.add(dedup_record)
-        self.db_session.commit()
+        self.interaction_manager.record_message_as_processed(channel_id, message_ts)
 
     def add_question_and_response_to_database(self, question_event, response_text, assistant_thread_id):
-        self.interaction_manager.add_question_and_answer(question=question_event.text, answer=response_text, thread_id=question_event.ts, assistant_thread_id=assistant_thread_id, channel_id=question_event.channel, question_ts=datetime.fromtimestamp(float(question_event.ts)), answer_ts=datetime.now())
+        self.interaction_manager.add_question_and_answer(question=question_event.text,
+                                                         answer=response_text,
+                                                         thread_id=question_event.ts,
+                                                         assistant_thread_id=assistant_thread_id,
+                                                         channel_id=question_event.channel,
+                                                         question_ts=datetime.fromtimestamp(float(question_event.ts)),
+                                                         answer_ts=datetime.now(),
+                                                         slack_user_id=question_event.user)
+
         print(f"\n\nQuestion and answer stored in the database: question: {question_event.dict()},\nAnswer: {response_text},\nAssistant_id {assistant_thread_id}\n\n")
 
     def process_question(self, question_event: QuestionEvent):
         channel_id = question_event.channel
         message_ts = question_event.ts
+        user_id = question_event.user
         try:
             context_page_ids = retrieve_relevant_documents(question_event.text)
             response_text, assistant_thread_id = query_assistant_with_context(question_event.text, context_page_ids, None)
@@ -63,7 +80,13 @@ class EventConsumer:
             print(f"Response from assistant: {response_text}\n")
             try:
                 self.record_message_as_processed_in_db(channel_id, message_ts)
-                self.add_question_and_response_to_database(question_event, response_text, assistant_thread_id)
+                self.add_question_and_response_to_database(question_event, response_text, assistant_thread_id=assistant_thread_id)
+                try:
+                    self.score_manager.add_or_update_score(slack_user_id=question_event.user, category='seeker',
+                                                           points=1)
+                    print(f"Score updated for user {question_event.user}")
+                except Exception as e:
+                    print(f"Error updating score for user {question_event.user}: {e}")
                 self.web_client.chat_postMessage(channel=channel_id, text=response_text, thread_ts=message_ts)
                 print(f"\nResponse posted to Slack thread: {message_ts}\n")
             except Exception as e:
