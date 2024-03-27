@@ -20,22 +20,13 @@ logging.basicConfig(level=logging.INFO)
 project_path = get_project_root()
 logging.log(logging.DEBUG, f"Project path: {project_path}")
 
-# build file_system_path and database_path from project_path
-file_system_path = project_path + "/content/file_system"
-database_path = project_path + "/content/database"
-vector_folder_path = database_path + "/confluence_page_vectors"
-chart_folder_path = project_path + "/content/charts"
-interactions_folder_path = database_path + "/confluence_interaction_vectors"
-vector_chunk_folder_path = database_path + "/confluence_page_vectors"
-sql_file_path = database_path + "/confluence_pages_sql.db"
-
-# paths for queues
-# queue for extracting ans storing page content from Confluence
-persist_page_processing_queue_path = os.path.join(project_path, "content", "transactional", "confluence_page_processing_queue")
-# queue for creating page vectors and storing them in chroma db
-persist_page_vector_queue_path = os.path.join(project_path, "content", "transactional", "confluence_page_vector_queue")
-
-
+file_system_path = os.path.join(project_path, "content", "file_system")
+chart_folder_path = os.path.join(project_path, "content", "charts")
+sql_file_path = os.path.join(project_path, "content", "database", "confluence_pages_sql.db")
+persist_page_processing_queue_path = os.path.join(project_path, "content", "queues", "confluence_page_processing_queue")
+persist_page_vector_queue_path = os.path.join(project_path, "content", "queues", "confluence_page_vector_queue")
+vector_folder_path = os.path.join(project_path, "content", "vectors", "confluence_pages")
+interactions_folder_path = os.path.join(project_path, "content", "vectors", "confluence_interactions")
 
 # Assistant IDs
 qa_assistant_id = os.environ.get("OPENAI_ASSISTANT_ID_QA")
