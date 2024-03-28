@@ -81,6 +81,23 @@ Easy onboarding, reach out if you need support.
 - poetry
 - pycharm
 
+### Managing python version with `asdf`
+
+Install `asdf` from https://asdf-vm.com/
+
+```
+# install plugin for python version management
+asdf plugin add python
+
+# install python version declared in .tool-versions
+asdf install python
+
+# test it
+python --version
+Python 3.12.2
+```
+
+The version that `asdf` will use for the current project is declared in `.tool-versions` file.
 
 ## Configuration
 1. Rename credentials_example.py to credentials.py & .env.example to .env
