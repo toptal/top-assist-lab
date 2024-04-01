@@ -6,7 +6,7 @@ import time
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from configuration import api_host, api_port
-from configuration import persist_page_processing_queue_path, persist_page_vector_queue_path
+from configuration import persist_page_processing_queue_path
 from persistqueue import Queue
 from file_system.file_manager import FileManager
 from database.page_manager import store_pages_data, is_page_processed, get_last_updated_timestamp
@@ -113,7 +113,6 @@ def submit_embedding_creation_request(page_id):
 def get_page_content_using_queue(space_key):
     logging.info(f"Starting to process pages for space key: {space_key}")
     process_page_queue = QueueManager(persist_page_processing_queue_path, space_key)
-    vectorization_queue = QueueManager(persist_page_vector_queue_path, space_key)
     file_manager = FileManager()
     page_content_map = {}
     page_processor = PageProcessor(file_manager, space_key)
@@ -121,7 +120,6 @@ def get_page_content_using_queue(space_key):
     def process_page_wrapper(page_id):
         logging.info(f"Processing page with ID {page_id}...")
         page_processor.process_page(page_id, page_content_map)
-        vectorization_queue.enqueue_page(page_id)
         process_page_queue.task_done()
         logging.info(f"Page with ID {page_id} processing complete, added for vectorization.")
 
