@@ -1,34 +1,11 @@
 # ./oai_assistants/query_assistant_from_documents.py
 from open_ai.assistants.utility import initiate_client
-from open_ai.assistants.file_manager import FileManager
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
 from configuration import qa_assistant_id, file_system_path
 import logging
 
 logging.basicConfig(level=logging.INFO)
-
-
-def add_files_to_assistant(assistant, file_ids):
-    """
-    Adds specified files to the assistant's context for referencing in responses.
-
-    Args:
-    assistant (Assistant): The assistant to which files will be added.
-    file_ids (list of str): List of file IDs to be added to the assistant.
-    """
-    client = initiate_client()
-    file_manager = FileManager(client)
-    assistant_manager = AssistantManager(client)
-
-    for file_id in file_ids:
-        chosen_file_path = file_system_path + f"/{file_id}.txt"
-        purpose = "assistants"
-        uploaded_file_id = file_manager.create(chosen_file_path, purpose)
-        print(f"File uploaded successfully with ID: {uploaded_file_id}")
-
-        assistant_manager.add_file_to_assistant(assistant.id, uploaded_file_id)
-        print(f"File {chosen_file_path} added to assistant {assistant.id}")
 
 
 def format_pages_as_context(file_ids, max_length=30000):
@@ -118,7 +95,7 @@ def query_assistant_with_context(question, page_ids, thread_id=None):
     print(f"Formatted question: {formatted_question}\n")
 
     # Query the assistant
-    messages, thread_id = thread_manager.add_message_and_wait_for_reply(formatted_question, [])
+    messages, thread_id = thread_manager.add_message_and_wait_for_reply(formatted_question)
     print(f"The thread_id is: {thread_id}\n Messages received: {messages}\n")
     if messages and messages.data:
         assistant_response = messages.data[0].content[0].text.value

@@ -42,13 +42,12 @@ class ThreadManager:
         else:
             print("\nThread already initialized with ID:", self.thread_id)
 
-    def add_message_and_wait_for_reply(self, user_message, message_files=[]):
+    def add_message_and_wait_for_reply(self, user_message):
         # Add the user's message to the thread
         self.client.beta.threads.messages.create(
             thread_id=self.thread_id,
             role="user",
-            content=user_message,
-            file_ids=message_files
+            content=user_message
         )
         print("\nUser message added to thread:", user_message)
 

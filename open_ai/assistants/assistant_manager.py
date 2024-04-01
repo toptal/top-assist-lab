@@ -1,6 +1,5 @@
 # ./oai_assistants/assistant_manager.py
 import json
-from open_ai.assistants.file_manager import FileManager
 from open_ai.assistants.utility import initiate_client
 
 
@@ -40,68 +39,6 @@ class AssistantManager:
             description=description,
             metadata=metadata,
             tools=tools
-        )
-        return response
-
-    def clean_missing_files_from_assistant(self, assistant_id):
-        """
-        Identifies and removes missing file references from an assistant's configuration.
-
-        This function checks the files associated with the specified assistant and identifies any files
-        that are no longer present in the file system. It then updates the assistant's configuration
-        to remove these missing files.
-
-        Parameters:
-        assistant_id (str): The ID of the assistant to be cleaned.
-
-        Returns:
-        list: A list of file IDs that were identified as missing and removed from the assistant.
-        """
-        assistant = self.load_assistant(assistant_id)
-        assistant_file_ids = assistant.file_ids if assistant.file_ids is not None else []
-
-        # Check if the assistant has any file IDs associated with it
-        if not assistant_file_ids:
-            print("No files are associated with this assistant.")
-            return []
-
-        file_manager = FileManager(initiate_client())
-        all_files = file_manager.list()
-        file_ids = list(all_files.keys())
-
-        missing_files = [file_id for file_id in assistant_file_ids if file_id not in file_ids]
-
-        # Check if there are any missing files
-        if missing_files:
-            for missing_file in missing_files:
-                print(f"Deleting missing file {missing_file} from assistant {assistant_id}.")
-                self.client.update(
-                    assistant_id=assistant_id,
-                    file_ids=[file_id for file_id in assistant_file_ids if file_id != missing_file]
-                )
-        else:
-            print("There are no missing files.")
-
-        return missing_files
-
-    def add_file_to_assistant(self, assistant_id, file_id):
-        """
-        Add a file to an assistant's list of files.
-
-        Args:
-            assistant_id: The ID of the assistant being updated.
-            file_id: The ID of the file to add to the assistant.
-
-        Returns:
-            The updated Assistant object.
-        """
-        assistant = self.client.retrieve(assistant_id)
-        existing_file_ids = assistant.file_ids if assistant.file_ids is not None else []
-        updated_file_ids = existing_file_ids + [file_id]
-
-        response = self.client.update(
-            assistant_id=assistant_id,
-            file_ids=updated_file_ids
         )
         return response
 
