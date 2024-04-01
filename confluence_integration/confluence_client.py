@@ -169,7 +169,3 @@ class ConfluenceClient:
         # Append a timestamp to the base key
         timestamp = int(time.time())
         return f"{base_key}{timestamp}"
-
-
-conf_client = ConfluenceClient()
-conf_client.create_space_if_not_found(space_name="Nur documentation QnA")
