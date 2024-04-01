@@ -130,9 +130,6 @@ def get_page_content_using_queue(space_key):
             executor.submit(process_page_wrapper, page_id)
 
     # After all threads are done, continue with the single-threaded part
-    page_ids = [page_id for page_id in page_content_map.keys()]
-    for page_id in page_ids:
-        submit_embedding_creation_request(page_id)
     logging.info(f"Page content for space key {space_key} processing complete.")
     store_pages_data(space_key, page_content_map)
 
