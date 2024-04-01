@@ -11,4 +11,3 @@ oai_api_key = os.environ.get("OPENAI_API_KEY")
 # Slack tokens Toptal
 slack_app_level_token = os.environ.get("SLACK_APP_TOKEN")
 slack_bot_user_oauth_token = os.environ.get("SLACK_BOT_TOKEN")
-slack_user_oauth_token = os.environ.get("SLACK_USER_TOKEN")
