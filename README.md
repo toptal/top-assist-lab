@@ -1,20 +1,20 @@
 # Nur AI
-The self-actualizing documentation Chat Bot that heals its knowledge gaps 
+The self-actualizing documentation Chat Bot that heals its knowledge gaps
 as naturally as a ray of light - with AI
 [Custom GPT to discuss the code base](https://chat.openai.com/g/g-zKBLXtfrD-shams-nur)
 
 ## Problem
 Organizational knowledge is hard to find and keep updated.
  Accessing information is challenging for busy individuals or those with neuro-divergent brains.
- Current solutions lead to outdated documentation and inaccessible information. 
+ Current solutions lead to outdated documentation and inaccessible information.
 
 ## Solution
-Nur AI utilizes generative AI to identify and fill knowledge gaps. 
+Nur AI utilizes generative AI to identify and fill knowledge gaps.
 Offers both text and in the future audio access to documentation.
-Currently in extensive MVP testing. 
+Currently in extensive MVP testing.
 
 ## Business model
-Open Source free to use - 
+Open Source free to use -
 Apache-2 license
 
 Easy onboarding, reach out if you need support.
@@ -25,6 +25,20 @@ Easy onboarding, reach out if you need support.
 - [Charbel Abou Younes](https://www.linkedin.com/in/charbelay/): Charbel, a software development virtuoso, brings his AWS expertise and Adobe Commerce proficiency to the fore, ensuring robust and scalable cloud solutions.
 
 - You...? Interested in AI, documentation, and making a difference? Join us! Whether it’s for a chat, a feature request, or to contribute, we're open to your ideas and contributions.
+
+# Testing
+
+## pytest
+
+Unit tests are located inside `tests` directory.
+
+Execution with coverage report:
+* fail if coverage is below 0% (`--cov-fail-under`)
+* location of code to be included in the coverage report: `--cov=relative_path/`
+
+```
+poetry run pytest --cov-fail-under=0 --cov=file_system/
+```
 
 ## Feature list
 
