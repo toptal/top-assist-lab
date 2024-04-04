@@ -31,7 +31,7 @@ jobs:
           poetry config virtualenvs.in-project true --local
 
       - name: Define a cache for the virtual environment based on the dependencies lock file
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./.venv
           key: venv-${{ hashFiles('poetry.lock') }}
@@ -40,4 +40,7 @@ jobs:
         run: poetry install
 
       - name: Run unit tests
-        run: poetry run pytest --cov-fail-under=0 --cov=file_system/
+        run: poetry run pytest --cov-fail-under=0 --cov=file_system/ tests/unit/
+
+      - name: Run functional tests
+        run: poetry run pytest tests/functional
