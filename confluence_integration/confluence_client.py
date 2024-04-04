@@ -23,12 +23,6 @@ class ConfluenceClient:
         username (str): The username for authentication.
         api_token (str): The API token for authentication.
         """
-        self.initialize_confluence_client()
-
-    def initialize_confluence_client(self):
-        """
-        Initialize the Confluence client.
-        """
         self.confluence = Confluence(
             url=confluence_credentials['base_url'],
             username=confluence_credentials['username'],
@@ -90,33 +84,6 @@ class ConfluenceClient:
         """Update an existing page with new content."""
         clean_content = self.validate_and_coerce_xhtml(content)  # Validate and clean the content
         return self.confluence.update_page(page_id=page_id, title=title, body=clean_content)
-
-    def retrieve_confluence_pages(self, space_key, limit=50):
-        """
-        Retrieve pages from a specified Confluence space using pagination.
-
-        Args:
-        space_key (str): The key of the Confluence space.
-        limit (int): The number of items to retrieve per page.
-
-        Returns:
-        list: A list of page data objects.
-        """
-        # Implementation goes here
-
-    def retrieve_child_items(self, item_id, content_type, limit=50):
-        """
-        Retrieve child items (pages or comments) for a given Confluence item using pagination.
-
-        Args:
-        item_id (str): The ID of the Confluence item (page or comment).
-        content_type (str): Type of content to retrieve ('page' or 'comment').
-        limit (int): The number of items to retrieve per page.
-
-        Returns:
-        list: A list of child item data objects.
-        """
-        # Implementation goes here
 
     def retrieve_space_list(self):
         """
@@ -202,31 +169,3 @@ class ConfluenceClient:
         # Append a timestamp to the base key
         timestamp = int(time.time())
         return f"{base_key}{timestamp}"
-
-    def retrieve_page_history(self, page_id):
-        """
-        Retrieve the history of a specified Confluence page.
-
-        Args:
-        page_id (str): The ID of the Confluence page.
-
-        Returns:
-        dict: A dictionary containing the history of the page.
-        """
-        # Implementation goes here
-
-    def retrieve_page_content(self, page_id):
-        """
-        Retrieve the content of a specified Confluence page.
-
-        Args:
-        page_id (str): The ID of the Confluence page.
-
-        Returns:
-        str: The content of the page.
-        """
-        # Implementation goes here
-
-
-conf_client = ConfluenceClient()
-conf_client.create_space_if_not_found(space_name="Nur documentation QnA")
