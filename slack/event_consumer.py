@@ -48,12 +48,6 @@ class EventConsumer:
         self.score_manager = ScoreManager()
         logging.log(logging.DEBUG, f"Slack Event Consumer initiated successfully")
 
-    def is_message_processed_in_db(self, channel_id, message_ts):
-        return self.interaction_manager.is_message_processed(channel_id, message_ts)
-
-    def record_message_as_processed_in_db(self, channel_id, message_ts):
-        self.interaction_manager.record_message_as_processed(channel_id, message_ts)
-
     def add_question_and_response_to_database(self, question_event, response_text, assistant_thread_id):
         self.interaction_manager.add_question_and_answer(question=question_event.text,
                                                          answer=response_text,
@@ -79,7 +73,6 @@ class EventConsumer:
         if response_text:
             print(f"Response from assistant: {response_text}\n")
             try:
-                self.record_message_as_processed_in_db(channel_id, message_ts)
                 self.add_question_and_response_to_database(question_event, response_text, assistant_thread_id=assistant_thread_id)
                 try:
                     self.score_manager.add_or_update_score(slack_user_id=question_event.user, category='seeker',
@@ -124,7 +117,6 @@ class EventConsumer:
 
         if response_text:
             print(f"Response from assistant: {response_text}\n")
-            self.record_message_as_processed_in_db(channel_id, message_ts)
             timestamp_str = datetime.now().isoformat()
             comment = {"text": feedback_event.text, "user": feedback_event.user, "timestamp": timestamp_str, "assistant response": response_text}
             self.interaction_manager.add_comment_to_interaction(thread_id=thread_ts, comment=comment)
