@@ -14,9 +14,6 @@ from confluence_integration.retrieve_space import process_page
 from database.page_manager import get_page_ids_missing_embeds
 
 
-host = os.environ.get("NUR_API_HOST", api_host)
-port = os.environ.get("NUR_API_PORT", api_port)
-
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -96,7 +93,7 @@ class PageProcessor:
 
 
 def submit_embedding_creation_request(page_id):
-    endpoint_url = f'http://{host}:{port}/api/v1/embeds'
+    endpoint_url = f'http://{api_host}:{api_port}/api/v1/embeds'
     headers = {"Content-Type": "application/json"}
     payload = {"page_id": page_id}
 

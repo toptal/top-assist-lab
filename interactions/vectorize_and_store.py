@@ -6,10 +6,6 @@ from open_ai.embedding.embed_manager import embed_text
 from configuration import embedding_model_id
 from configuration import api_host, api_port
 import requests
-import os
-
-host = os.environ.get("NUR_API_HOST", api_host)
-port = os.environ.get("NUR_API_PORT", api_port)
 
 
 def get_qna_interactions_from_database():
@@ -130,7 +126,7 @@ def submit_create_interaction_embeds_request(interaction_id):
     :return: None
     """
 
-    endpoint_url = f'http://{host}:{port}/api/v1/interaction_embeds'
+    endpoint_url = f'http://{api_host}:{api_port}/api/v1/interaction_embeds'
     headers = {"Content-Type": "application/json"}
     # The key here should be "interaction_id" as expected by the InteractionEmbedRequest model in the FastAPI endpoint
     payload = {"interaction_id": interaction_id}

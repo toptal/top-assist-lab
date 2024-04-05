@@ -1,5 +1,4 @@
 # ./api/endpoint.py
-import os
 from fastapi import FastAPI
 import uvicorn
 from openai import OpenAI
@@ -10,9 +9,6 @@ from pydantic import BaseModel
 from vector.chroma import vectorize_document_and_store_in_db
 from configuration import api_host, api_port
 from interactions.vectorize_and_store import vectorize_interaction_and_store_in_db
-
-host = os.environ.get("NUR_API_HOST", api_host)
-port = os.environ.get("NUR_API_PORT", api_port)
 
 processor = FastAPI()
 
@@ -93,7 +89,7 @@ def create_interaction_embeds(InteractionEmbedRequest: InteractionEmbedRequest):
 
 def main():
     """Entry point for starting the FastAPI application."""
-    uvicorn.run("api.endpoint:processor", host=host, port=int(port), reload=True)
+    uvicorn.run("api.endpoint:processor", host=api_host, port=api_port, reload=True)
 
 
 if __name__ == "__main__":
