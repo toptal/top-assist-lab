@@ -104,25 +104,6 @@ def check_date_filter(update_date, space_page_ids):
     return updated_pages
 
 
-def format_page_content_for_llm(page_data):
-    """
-        Format page data into a string of key-value pairs suitable for LLM (Language Learning Models) context.
-
-        This function converts page data into a text format that can be easily consumed by language models,
-        with each key-value pair on a separate line.
-
-        Args:
-        page_data (dict): A dictionary containing page data with keys like title, author, createdDate, etc.
-
-        Returns:
-        str: A string representation of the page data in key-value format.
-        """
-    content = ""
-    for key, value in page_data.items():
-        content += f"{key}: {value}\n"
-    return content
-
-
 def get_page_comments_content(page_id):
     """
     Retrieve and format the content of all comments on a Confluence page.
@@ -155,12 +136,11 @@ def get_page_comments_content(page_id):
     return '\n'.join(result)
 
 
-def process_page(page_id, space_key, file_manager, page_content_map):
+def process_page(page_id, space_key, page_content_map):
     """
     Process a page and store its data in files and a database.
     :param page_id:
     :param space_key:
-    :param file_manager:
     :param page_content_map:
     :return: page_data
     """
@@ -190,11 +170,6 @@ def process_page(page_id, space_key, file_manager, page_content_map):
             'comments': page_comments_content,
             'datePulledFromConfluence': current_time
         }
-
-        # Store data for files
-        formatted_content = format_page_content_for_llm(page_data)
-        file_manager.create(f"{page_id}.txt", formatted_content)  # Create a file for each page
-        print(f"Page with ID {page_id} processed and written to file.")
 
         # Store data for database
         page_content_map[page_id] = page_data

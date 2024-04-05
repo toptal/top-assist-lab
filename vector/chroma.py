@@ -1,27 +1,19 @@
 # Import necessary modules and functions
-from configuration import vector_folder_path, file_system_path, embedding_model_id, document_count
-from configuration import pages_collection_name
-from file_system.file_manager import FileManager
+from configuration import pages_collection_name, vector_folder_path, embedding_model_id, document_count
 import chromadb
 import logging
 from typing import List
 from open_ai.embedding.embed_manager import embed_text
-from database.page_manager import add_or_update_embed_vector
+from database.page_manager import add_or_update_embed_vector, find_page, format_page_for_llm
 
 
-def generate_document_embedding(page_id, model=embedding_model_id):
+def generate_document_embedding(page_id, page_content, model=embedding_model_id):
     """
     Generates an embedding for the given text using the specified OpenAI model.
     Returns a tuple of (embedding, error_message).
     """
-    file_manager = FileManager()
-    try:
-        page_content = file_manager.read(f"{file_system_path}/{page_id}.txt")
-        # Ensure the content does not exceed the maximum token limit
-        page_content = page_content[:8190]
-    except Exception as e:
-        logging.error(f"Error reading page content for page ID {page_id}: {e}")
-        return None, f"Error reading page content: {e}"
+    # Ensure the content does not exceed the maximum token limit
+    page_content = page_content[:8190]
 
     try:
         # embed_text now returns a serialized JSON string of the embedding vector
@@ -81,7 +73,13 @@ def vectorize_document_and_store_in_db(page_id):
     :param page_id: The ID of the page to vectorize.
     :return: None
     """
-    embedding, error_message = generate_document_embedding(page_id)
+    page = find_page(page_id)
+    if not page:
+        logging.error(f"Page content for page ID {page_id} could not be retrieved.")
+        return
+
+    page_content = format_page_for_llm(page)
+    embedding, error_message = generate_document_embedding(page_id, page_content)
     if embedding:
         # Store the embedding in the database
         add_or_update_embed_vector(page_id, embedding)

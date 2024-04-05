@@ -8,7 +8,6 @@ from concurrent.futures import ThreadPoolExecutor
 from configuration import api_host, api_port
 from configuration import persist_page_processing_queue_path
 from persistqueue import Queue
-from file_system.file_manager import FileManager
 from database.page_manager import store_pages_data, is_page_processed, get_last_updated_timestamp
 from confluence_integration.retrieve_space import process_page
 from database.page_manager import get_page_ids_missing_embeds
@@ -69,13 +68,11 @@ class PageProcessor:
     Processes the pages.
     """
 
-    def __init__(self, file_manager, space_key):
+    def __init__(self, space_key):
         """
         Initializes the page processor.
-        :param file_manager:
         :param space_key:
         """
-        self.file_manager = file_manager
         self.space_key = space_key
 
     def process_page(self, page_id, page_content_map):
@@ -87,9 +84,9 @@ class PageProcessor:
         """
         last_updated_in_db = get_last_updated_timestamp(page_id)
         if last_updated_in_db and not is_page_processed(page_id, last_updated_in_db):
-            process_page(page_id, self.space_key, self.file_manager, page_content_map)
+            process_page(page_id, self.space_key, page_content_map)
         elif not last_updated_in_db:
-            process_page(page_id, self.space_key, self.file_manager, page_content_map)
+            process_page(page_id, self.space_key, page_content_map)
 
 
 def submit_embedding_creation_request(page_id):
@@ -110,9 +107,8 @@ def submit_embedding_creation_request(page_id):
 def get_page_content_using_queue(space_key):
     logging.info(f"Starting to process pages for space key: {space_key}")
     process_page_queue = QueueManager(persist_page_processing_queue_path, space_key)
-    file_manager = FileManager()
     page_content_map = {}
-    page_processor = PageProcessor(file_manager, space_key)
+    page_processor = PageProcessor(space_key)
 
     def process_page_wrapper(page_id):
         logging.info(f"Processing page with ID {page_id}...")

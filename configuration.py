@@ -20,7 +20,6 @@ logging.basicConfig(level=logging.INFO)
 project_path = get_project_root()
 logging.log(logging.DEBUG, f"Project path: {project_path}")
 
-file_system_path = os.path.join(project_path, "content", "file_system")
 chart_folder_path = os.path.join(project_path, "content", "charts")
 sql_file_path = os.path.join(project_path, "content", "database", "confluence_pages_sql.db")
 persist_page_processing_queue_path = os.path.join(project_path, "content", "queues", "confluence_page_processing_queue")
@@ -67,7 +66,4 @@ system_confluence_knowledge_space = system_knowledge_space_private
 
 
 # Knowledge collection Slack channel ids
-slack_channel_priv_kb = "C06EGCDNA4A"
-slack_channel_tt_ta_debug = "C06EA5WFGUF"
-slack_channel_tt_ta = "C052GJ7GLVC"
-channel_id = slack_channel_priv_kb
+knowledge_gap_discussions_channel_id = os.environ.get("SLACK_CHANNEL_ID_KNOWLEDGE_GAP_DISCUSSIONS")
