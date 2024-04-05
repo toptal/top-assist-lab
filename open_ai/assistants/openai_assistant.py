@@ -1,27 +1,29 @@
 # ./oai_assistants/openai_assistant.py
-from open_ai.assistants.utility import new_assistant, initiate_client
+from open_ai.assistants.utility import initiate_client
 from open_ai.assistants.assistant_manager import AssistantManager
 from open_ai.assistants.thread_manager import ThreadManager
 
+from .templates import qa_assistant_template, knowledge_gap_assistant_template
 
-def create_assistant(client, new_assistant=new_assistant):
+
+def create_assistant(client, template):
     """
     Creates a new assistant based on the provided template.
 
     Parameters:
     client: OpenAI client instance used for assistant creation.
-    new_assistant (dict, optional): Template for the new assistant. Defaults to the global `new_assistant`.
+    template (dict): Template for the new assistant.
 
     Returns:
     Assistant: An instance of the created assistant.
     """
     assistant_manager = AssistantManager(client)
     return assistant_manager.create_assistant(
-        new_assistant['model'],
-        new_assistant['name'],
-        new_assistant['instructions'],
-        new_assistant['tools'],
-        new_assistant['description']
+        template['model'],
+        template['name'],
+        template['instructions'],
+        template['tools'],
+        template['description']
     )
 
 
@@ -174,7 +176,8 @@ def user_interaction(client):
         print("\nUser Interaction Menu:")
         print("--------------------------------")
         print("1. Manage Assistants - View, modify, or delete assistants.")
-        print("2. Create a New Assistant - Start the process of creating a new assistant.")
+        print("2. Create a New Q&A Assistant - Start the process of creating a new assistant.")
+        print("3. Create a New Knowledge Gap Assistant - Start the process of creating a new assistant.")
         print("0. Exit - Exit the user interaction menu.")
         print("--------------------------------")
 
@@ -182,7 +185,10 @@ def user_interaction(client):
         if choice == '1':
             manage_assistants(client)
         elif choice == '2':
-            created_assistant = create_assistant(client, new_assistant)
+            created_assistant = create_assistant(client, qa_assistant_template)
+            print(f"New assistant created with ID: {created_assistant.id}")
+        elif choice == '3':
+            created_assistant = create_assistant(client, knowledge_gap_assistant_template)
             print(f"New assistant created with ID: {created_assistant.id}")
         elif choice == '0':
             print("Exiting user interaction menu.")

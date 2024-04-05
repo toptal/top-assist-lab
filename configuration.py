@@ -35,7 +35,7 @@ quizz_assistant_id = os.environ.get("OPENAI_ASSISTANT_ID_KNOWLEDGE_GAP")
 # Doesn't apply for assistants
 # Assistants have as part of the assistant the model id
 gpt_3t = ""
-gpt_4t = "gpt-4-1106-preview"
+gpt_4t = "gpt-4-turbo-preview"
 model_id = gpt_4t
 
 # Embedding model IDs
