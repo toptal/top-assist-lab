@@ -81,15 +81,11 @@ def vectorize_document_and_store_in_db(page_id):
     page_content = format_page_for_llm(page)
     embedding, error_message = generate_document_embedding(page_id, page_content)
     if embedding:
-        # Store the embedding in the database
-        add_or_update_embed_vector(page_id, embedding)
-        logging.info(f"Embedding for page ID {page_id} stored in the database.")
+        if len(embedding) > 0:
+            # Store the embedding in the database
+            add_or_update_embed_vector(page_id, embedding)
+            logging.info(f"Embedding for page ID {page_id} stored in the database.")
+        else:
+            logging.error(f"Embedding for page ID {page_id} is empty.")
     else:
         logging.error(f"Embedding for page ID {page_id} could not be generated. {error_message}")
-
-
-if __name__ == '__main__':
-    # Example usage
-    question = "What is the role of AI in healthcare?"
-    document_ids = retrieve_relevant_documents(question)
-    print(f"Retrieved Document IDs: {document_ids}")

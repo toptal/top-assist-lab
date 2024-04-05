@@ -2,7 +2,7 @@ from database.quiz_question_manager import QuizQuestionManager
 from open_ai.chat.format_knowledge_gathering import query_gpt_4t_with_context
 import json
 import re
-from confluence_integration.system_knowledge_manager import create_page_on_confluence
+from confluence.system_knowledge_manager import create_page_on_confluence
 from gamification.score_manager import ScoreManager
 from slack.event_consumer import get_user_name_from_id
 from slack_sdk.errors import SlackApiError

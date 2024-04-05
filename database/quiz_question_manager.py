@@ -97,10 +97,3 @@ class QuizQuestionManager:
         except SQLAlchemyError as e:
             print(f"Error getting unposted questions: {e}")
             return None
-
-
-# Example usage
-if __name__ == "__main__":
-    qzm = QuizQuestionManager()
-    question_id = qzm.add_quiz_question("What is the airspeed velocity of an unladen swallow?")
-    print(f"Added question with ID: {question_id}")

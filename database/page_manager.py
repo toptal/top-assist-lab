@@ -30,19 +30,7 @@ class PageData(Base):
     content = Column(Text)
     comments = Column(Text, default=json.dumps([]))
     last_embedded = Column(DateTime)
-    date_pulled_from_confluence = Column(DateTime)
     embed = Column(Text, default=json.dumps([]))
-
-
-class PageProgress(Base):
-    """
-    SQLAlchemy model for storing Confluence page progress.
-    """
-    __tablename__ = 'page_progress'
-    id = Column(Integer, primary_key=True)
-    page_id = Column(String, unique=True)
-    processed = Column(Boolean, default=False)
-    processed_time = Column(DateTime)
 
 
 def parse_datetime(date_string):
@@ -58,31 +46,31 @@ def parse_datetime(date_string):
     return datetime.fromisoformat(date_string.replace('Z', '+00:00'))
 
 
-def store_pages_data(space_key, pages_data):
+def store_pages_data(space_key, pages):
     """
     Store Confluence page data into the database.
 
     Args:
     space_key (str): The key of the Confluence space.
-    pages_data (dict): A dictionary of page data, keyed by page ID.
+    pages (lits): A list of page data
     """
     with Session() as session:
-        for page_id, page_info in pages_data.items():
-            created_date = parse_datetime(page_info['createdDate'])
-            last_updated = parse_datetime(page_info['lastUpdated'])
-            date_pulled_from_confluence = page_info['datePulledFromConfluence']
+        for page in pages:
+            page_id = page['pageId']
+            created_date = parse_datetime(page['createdDate'])
+            last_updated = parse_datetime(page['lastUpdated'])
 
             new_page = PageData(page_id=page_id,
                                 space_key=space_key,
-                                title=page_info['title'],
-                                author=page_info['author'],
+                                title=page['title'],
+                                author=page['author'],
                                 createdDate=created_date,
                                 lastUpdated=last_updated,
-                                content=page_info['content'],
-                                comments=page_info['comments'],
-                                date_pulled_from_confluence=date_pulled_from_confluence
+                                content=page['content'],
+                                comments=page['comments']
                                 )
             session.add(new_page)
+
             print(f"Page with ID {page_id} written to database")
         session.commit()
 
@@ -237,69 +225,6 @@ def update_embed_date(page_ids):
     conn.commit()
     conn.close()
     return True
-
-
-def mark_page_as_processed(page_id):
-    """
-    Mark a page as processed in the database.
-    :param page_id:
-    :return:
-    """
-    session = Session()
-    current_time = datetime.now()
-    record = session.query(PageProgress).filter_by(page_id=page_id).first()
-    if not record:
-        record = PageProgress(page_id=page_id, processed=True, processed_time=current_time)
-        session.add(record)
-    else:
-        record.processed = True
-        record.processed_time = current_time
-    session.commit()
-    session.close()
-    return True
-
-
-def is_page_processed(page_id, last_updated):
-    """
-    Check if a page has already been processed.
-    :param page_id:
-    :param last_updated:
-    :return:
-    """
-    session = Session()
-    record = session.query(PageProgress).filter_by(page_id=page_id).first()
-    session.close()
-    if record and record.processed:
-        return last_updated <= record.processed_time
-    return False
-
-
-def reset_processed_status():
-    """
-    Reset the processed status of all pages.
-    :return:
-    """
-    session = Session()
-    session.query(PageProgress).update({PageProgress.processed: False})
-    session.commit()
-    session.close()
-    return True
-
-
-def get_last_updated_timestamp(page_id):
-    """
-    Get the last updated timestamp for a page.
-    :param page_id:
-    :return:
-    """
-    session = Session()
-    page_record = session.query(PageData).filter_by(page_id=page_id).first()
-    session.close()
-
-    if page_record:
-        return page_record.lastUpdated
-    else:
-        return None
 
 
 def find_page(page_id) -> Optional[PageData]:
