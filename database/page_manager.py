@@ -1,4 +1,5 @@
 # ./database/nur_database.py
+from typing import List, Optional
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base  # Updated import
 import sqlite3
@@ -299,6 +300,53 @@ def get_last_updated_timestamp(page_id):
         return page_record.lastUpdated
     else:
         return None
+
+
+def find_page(page_id) -> Optional[PageData]:
+    """
+    Find a page in the database by its ID.
+    :param page_id: The ID of the page to find.
+    :return: The page data if found, or None if not found.
+    """
+    session = Session()
+    page_record = session.query(PageData).filter_by(page_id=page_id).first()
+    session.close()
+    return page_record
+
+
+def find_pages(page_ids) -> List[PageData]:
+    """
+    Find multiple pages in the database by their IDs.
+    :param page_ids: A list of page IDs to find.
+    :return: A list of page data if found, or an empty list if not found.
+    """
+    session = Session()
+    pages = session.query(PageData).filter(PageData.page_id.in_(page_ids)).all()
+    session.close()
+    return pages
+
+
+def format_page_for_llm(page: PageData) -> str:
+    """
+    Format a page for use with the LLM.
+    :param page: The page data.
+    :return: The formatted page content as a string.
+    """
+    page_data = {
+        'spaceKey': page.space_key,
+        'pageId': page.page_id,
+        'title': page.title,
+        'author': page.author,
+        'createdDate': page.createdDate,
+        'lastUpdated': page.lastUpdated,
+        'content': page.content,
+        'comments': page.comments
+    }
+
+    content = ""
+    for key, value in page_data.items():
+        content += f"{key}: {value}\n"
+    return content
 
 
 # Set up the database engine and create tables if they don't exist

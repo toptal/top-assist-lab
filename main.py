@@ -2,7 +2,6 @@
 from confluence_integration.retrieve_space import choose_space
 from vector.chroma import retrieve_relevant_documents
 from open_ai.assistants.query_assistant_from_documents import query_assistant_with_context
-from open_ai.chat.query_from_documents import query_gpt_4t_with_context
 from slack.bot import load_slack_bot
 from open_ai.assistants.openai_assistant import load_manage_assistants
 from interactions.vectorize_and_store import vectorize_interactions_and_store_in_db
@@ -24,23 +23,16 @@ def answer_question_with_assistant(question):
     return response, thread_id
 
 
-def answer_question_with_gpt_4t(question):
-    relevant_document_ids = retrieve_relevant_documents(question)
-    response = query_gpt_4t_with_context(question, relevant_document_ids)
-    return response
-
-
 def main_menu():
     while True:
         print("\nMain Menu:")
         print("1. Load New Documentation Space")
         print("2. Ask a Question to GPT-4T Assistant")
-        print("3. Ask a question to GPT-4T")
-        print("4. Create a vector db for interactions")
-        print("5. Start Slack Bot")
-        print("6. Manage assistants")
-        print("7. Identify knowledge gaps")
-        print("8. Visualize Confluence Pages Spacial Distribution")
+        print("3. Create a vector db for interactions")
+        print("4. Start Slack Bot")
+        print("5. Manage assistants")
+        print("6. Identify knowledge gaps")
+        print("7. Visualize Confluence Pages Spacial Distribution")
         print("0. Cancel/Quit")
         choice = input("Enter your choice (0-6): ")
 
@@ -55,18 +47,12 @@ def main_menu():
                 print(f"\nThread ID: {thread_id}\nAnswer: {answer}")
 
         elif choice == "3":
-            question = ask_question()
-            if question:
-                answer = answer_question_with_gpt_4t(question)
-                print("\nAnswer:", answer)
-
-        elif choice == "4":
             print("Creating vector db for interactions")
             vectorize_interactions_and_store_in_db()
             vector_interaction_manager = VectorInteractionManager()
             vector_interaction_manager.add_to_vector()
 
-        elif choice == "5":
+        elif choice == "4":
             print("Starting Slack Bot Using Assistants and fast API...")
             # Run the FastAPI server
             input("Started the FastAPI server located at './api/endpoint' and Press Enter to continue.")
@@ -74,14 +60,14 @@ def main_menu():
             load_slack_bot()
             print("Slack Bot is running in parallel processing mode.")
 
-        elif choice == "6":
+        elif choice == "5":
             load_manage_assistants()
 
-        elif choice == "7":
+        elif choice == "6":
             context = input("Enter the context you want to identifying knowledge gaps in\nex:(billing reminders): ")
             identify_knowledge_gaps(context)
 
-        elif choice == "8":
+        elif choice == "7":
             print("Starting 3D visualization process...")
             load_confluence_pages_spacial_distribution()
 

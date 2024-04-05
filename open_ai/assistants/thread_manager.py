@@ -3,8 +3,6 @@ import time
 import json
 from openai import OpenAI
 
-from context.prepare_context import get_context
-
 class ThreadManager:
     """
     Manages threads for asynchronous handling of conversations or operations in the GPT-4-Turbo-Assistant.
@@ -151,15 +149,9 @@ class ThreadManager:
                 arguments = json.loads(tool_call.function.arguments)
                 output = None
 
-                # Here, you should match the function_name to your actual function handling logic
-                # For example, if you have a local function to handle 'get_context'
-                if function_name == "get_context":
-                    # Assuming you have a method defined to handle this
-                    # Make sure to define get_context or any required function to match this call
-                    output = get_context(**arguments)
+                raise NotImplementedError("Function handling logic not implemented.")
 
-                    # Submit the output back to the assistant
-                self.submit_function_output(run.thread_id, run.id, tool_call.id, output)
+                # self.submit_function_output(run.thread_id, run.id, tool_call.id, output)
 
     def submit_function_output(self, thread_id, run_id, tool_call_id, output):
         self.client.beta.threads.runs.submit_tool_outputs(

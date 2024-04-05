@@ -1,7 +1,6 @@
 # ./gpt_4t/format_knowledge_gathering.py
 from openai import OpenAI
 from credentials import oai_api_key
-from configuration import file_system_path
 from configuration import model_id
 
 client = OpenAI(api_key=oai_api_key)

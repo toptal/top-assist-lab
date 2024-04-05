@@ -1,46 +1,43 @@
 # ./oai_assistants/query_assistant_from_documents.py
+from typing import List
 from open_ai.assistants.utility import extract_assistant_response, initiate_client
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
-from configuration import qa_assistant_id, file_system_path
+from configuration import qa_assistant_id
 import logging
+
+from database.page_manager import PageData, find_pages, format_page_for_llm
 
 logging.basicConfig(level=logging.INFO)
 
 
-def format_pages_as_context(file_ids, max_length=30000):
+def format_pages_as_context(pages: List[PageData], max_length=30000, truncation_label=" [Content truncated due to size limit.]"):
     """
     Formats specified files as a context string for referencing in responses,
     ensuring the total context length does not exceed the specified maximum length.
 
     Args:
-        file_ids (list of str): List of file IDs to be formatted as context.
+        pages (list of PageData): List of pages to be formatted as context.
         max_length (int): The maximum length allowed for the context.
+        truncation_label (str): The label to indicate that the content has been truncated.
 
     Returns:
         str: The formatted context within the maximum length.
     """
     context = ""
-    for file_id in file_ids:
-        if len(context) >= max_length:
-            # If we've already reached or exceeded the maximum length, stop adding more content.
-            break
-        chosen_file_path = file_system_path + f"/{file_id}.txt"
-        with open(chosen_file_path, 'r') as file:
-            file_content = file.read()
-            # Check if adding the next file's content will exceed the max length
-            title = file_content.split('title: ')[1].split('\n')[0].strip()
-            space_key = file_content.split('spaceKey: ')[1].split('\n')[0].strip()
-            additional_context = f"\nDocument Title: {title}\nSpace Key: {space_key}\n\n{file_content}"
+    for page in pages:
+        title = page.title
+        space_key = page.space_key
+        file_content = format_page_for_llm(page)
+        page_data = f"\nDocument Title: {title}\nSpace Key: {space_key}\n\n{file_content}"
 
-            if len(context) + len(additional_context) <= max_length:
-                context += additional_context
-            else:
-                # If adding the whole document would exceed the limit,
-                # only add as much as possible, then break
-                available_space = max_length - len(context) - len(" [Content truncated due to size limit.]")
-                context += additional_context[:available_space] + " [Content truncated due to size limit.]"
-                break  # Stop adding more content to ensure we respect the maximum length
+        # Truncate and stop if the total length exceeds the maximum allowed
+        if len(context) + len(page_data) > max_length:
+            available_space = max_length - len(context) - len(truncation_label)
+            context += page_data[:available_space] + truncation_label
+            break
+
+        context += page_data
 
     return context
 
@@ -74,7 +71,8 @@ def query_assistant_with_context(question, page_ids, thread_id=None):
     print(f"IDs of pages to load in context : {page_ids}\n")
 
     # Format the context
-    context = format_pages_as_context(page_ids)
+    pages = find_pages(page_ids)
+    context = format_pages_as_context(pages)
     print(f"\n\nContext formatted: {context}\n")
 
     # Initialize ThreadManager with or without an existing thread_id

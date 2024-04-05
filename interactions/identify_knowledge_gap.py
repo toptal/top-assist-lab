@@ -3,7 +3,7 @@ import chromadb
 import logging
 import json
 from typing import List, Tuple
-from configuration import interactions_folder_path, embedding_model_id, channel_id
+from configuration import interactions_folder_path, embedding_model_id, knowledge_gap_discussions_channel_id
 from configuration import interaction_retrieval_count, interactions_collection_name
 from configuration import quizz_assistant_id
 from open_ai.embedding.embed_manager import embed_text
@@ -245,4 +245,4 @@ def identify_knowledge_gaps(context):
     print(f"Stored questions with IDs: {[q.id for q in quiz_question_dtos]}")
 
     # Updated function call to match the expected input
-    quiz_questions = post_questions_to_slack(channel_id=channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)
+    quiz_questions = post_questions_to_slack(channel_id=knowledge_gap_discussions_channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)
