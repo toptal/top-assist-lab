@@ -22,7 +22,7 @@ confluence = Confluence(
 
 def get_space_page_ids(space_key):
     """
-    Retrieves all page IDs in a given space, including child pages
+    Retrieves all page IDs in a given space, including child pages.
 
     Args:
     space_key (str): The key of the Confluence space.
