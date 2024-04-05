@@ -1,9 +1,11 @@
 from atlassian import Confluence
-from credentials import confluence_credentials
-import logging
-import time
 from bs4 import BeautifulSoup
+import logging
 import re
+import time
+
+from credentials import confluence_credentials
+
 
 # Set up basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

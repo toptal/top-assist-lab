@@ -81,7 +81,3 @@ def load_confluence_pages_spacial_distribution():
     page_ids, all_documents, embeddings_json = import_data()
     reduced_embeddings, cluster_labels, hover_texts = prepare_data(all_documents, embeddings_json, n_clusters=10)
     visualize_page_clusters_3d(reduced_embeddings, cluster_labels, hover_texts)
-
-
-if __name__ == '__main__':
-    load_confluence_pages_spacial_distribution()

@@ -1,10 +1,9 @@
 # chroma_module.py
-from configuration import vector_folder_path
 import chromadb
-from database.page_manager import get_all_page_data_from_db
 import json
-from confluence_integration.extract_page_content_and_store_processor import embed_pages_missing_embeds
-from configuration import pages_collection_name
+
+from configuration import pages_collection_name, vector_folder_path
+from database.page_manager import get_all_page_data_from_db
 
 # Initialize the Chroma PersistentClient for disk persistence
 client = chromadb.PersistentClient(path=vector_folder_path)
@@ -69,12 +68,3 @@ def add_embeds_to_vector_db(space_key=None):
     collection_name = pages_collection_name
     add_to_vector(collection_name, space_key=space_key)
     print(f"Embeddings added to {collection_name} collection.")
-
-
-if __name__ == '__main__':
-    embed_pages_missing_embeds()
-    add_embeds_to_vector_db()
-    # initiate the collection and peek at the embeddings
-    collection = client.get_collection(pages_collection_name)
-    print(collection.peek())
-    print(collection.count())

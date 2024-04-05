@@ -184,7 +184,3 @@ def vectorize_interactions_and_store_in_db(retry_limit: int = 3, wait_time: int 
         print("Some interactions still lack embeddings after all attempts.")
     else:
         print("All interactions now have embeddings. Process complete.")
-
-
-if __name__ == "__main__":
-    vectorize_interactions_and_store_in_db()
