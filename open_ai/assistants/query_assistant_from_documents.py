@@ -1,5 +1,5 @@
 # ./oai_assistants/query_assistant_from_documents.py
-from open_ai.assistants.utility import initiate_client
+from open_ai.assistants.utility import extract_assistant_response, initiate_client
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
 from configuration import qa_assistant_id, file_system_path
@@ -98,25 +98,10 @@ def query_assistant_with_context(question, page_ids, thread_id=None):
     messages, thread_id = thread_manager.add_message_and_wait_for_reply(formatted_question)
     print(f"The thread_id is: {thread_id}\n Messages received: {messages}\n")
     if messages and messages.data:
-        assistant_response = messages.data[0].content[0].text.value
+        assistant_response = extract_assistant_response(messages)
         print(f"Assistant full response: {assistant_response}\n")
     else:
         assistant_response = "No response received."
         print(f"No response received.\n")
 
     return assistant_response, thread_id
-
-
-if __name__ == "__main__":
-    # First query - introduce a piece of information
-    initial_question = "My name is Roland, what do you know about my name?"
-    initial_response, thread_id = query_assistant_with_context(initial_question, [])
-
-    print("Initial Response:", initial_response)
-    print("Thread ID from Initial Query:", thread_id)
-
-    # Second query - follow-up question using the thread ID from the first query
-    follow_up_question = "What was my name?"
-    follow_up_response, _ = query_assistant_with_context(follow_up_question, [], thread_id=thread_id)
-
-    print("Follow-up Response:", follow_up_response)

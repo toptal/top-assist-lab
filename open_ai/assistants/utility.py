@@ -17,6 +17,29 @@ def initiate_client():
     return client
 
 
+def extract_assistant_response(messages) -> str:
+    """
+    Extracts the assistant's reply from a list of messages.
+
+    Args:
+    messages (list): A list of messages, including the assistant's response to a question.
+
+    Returns:
+    str: The assistant's reply extracted from the messages.
+    """
+    result = []
+    # Messages are returned in reverse chronological order
+    # so to build a full reply we should take most recent
+    # assistant messages block and concatenate them in reverse order
+    for message in messages.data:
+        if message.role != 'assistant':
+            break
+        result.append(message.content[0].text.value)
+    result.reverse()
+    result = '\n'.join(result)
+    return result
+
+
 # Sample assistant template used for creating new assistants in the system.
 new_assistant_with_tools = {
     "model": model_id,

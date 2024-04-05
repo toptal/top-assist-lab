@@ -7,7 +7,7 @@ from configuration import interactions_folder_path, embedding_model_id, channel_
 from configuration import interaction_retrieval_count, interactions_collection_name
 from configuration import quizz_assistant_id
 from open_ai.embedding.embed_manager import embed_text
-from open_ai.assistants.utility import initiate_client
+from open_ai.assistants.utility import extract_assistant_response, initiate_client
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
 from database.interaction_manager import QAInteractionManager, QAInteractions
@@ -144,25 +144,25 @@ def query_assistant_with_context(context, formatted_interactions, thread_id=None
 
     # Format the question with context and query the assistant
 
-    formatted_question = (f"""After analyzing the provided questions_text, 
+    formatted_question = (f"""After analyzing the provided questions_text,
     Keep only the questions that are related to {context}
     From these identify those that were not provided a satisfactory answer in the answer_text
     These questions should reflect gaps in our current knowledge or documentation.
     Compile these questions so we can ask them to the domain experts and recover that knowledge.
     Provide them strictly in a JSON array, following the specified structure.
-    Each entry should include the question and a brief explanation of why it was 
+    Each entry should include the question and a brief explanation of why it was
     included, how it relates to the {context} domain, and what part of the question wasn't covered.
-    Only include questions relevant to this domain:{context}\n 
+    Only include questions relevant to this domain:{context}\n
     f"Context:{formatted_interactions}\n
     """)
 
     print(f"Formatted question:\n{formatted_question}\n")
 
     # Query the assistant
-    messages, thread_id = thread_manager.add_message_and_wait_for_reply(formatted_question, [])
+    messages, thread_id = thread_manager.add_message_and_wait_for_reply(formatted_question)
     print(f"The thread_id is: {thread_id}\n Messages received: {messages}\n")
     if messages and messages.data:
-        assistant_response = messages.data[0].content[0].text.value
+        assistant_response = extract_assistant_response(messages)
         print(f"Assistant full response: {assistant_response}\n")
     else:
         assistant_response = "No response received."
@@ -246,7 +246,3 @@ def identify_knowledge_gaps(context):
 
     # Updated function call to match the expected input
     quiz_questions = post_questions_to_slack(channel_id=channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)
-
-
-if __name__ == "__main__":
-    identify_knowledge_gaps("infrastructure")
