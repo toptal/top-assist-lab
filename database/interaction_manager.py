@@ -1,10 +1,11 @@
 # ./database/interaction_manager.py
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text
 from sqlalchemy.orm import sessionmaker, declarative_base
-from configuration import sql_file_path
 from datetime import datetime, timezone
 import json
-from database.slack_message_manager import SlackMessageDeduplication
+
+from configuration import sql_file_path
+
 
 # Define the base class for SQLAlchemy models
 Base = declarative_base()
@@ -146,27 +147,6 @@ class QAInteractionManager:
                 (QAInteractions.embed != json.dumps([])) |
                 (QAInteractions.embed != '')
             ).all()
-        finally:
-            session.close()
-
-
-    def is_message_processed(self, channel_id, message_ts):
-        session = self.Session()
-        try:
-            return session.query(SlackMessageDeduplication).filter_by(channel_id=channel_id,
-                                                                      message_ts=message_ts).first() is not None
-        finally:
-            session.close()
-
-    def record_message_as_processed(self, channel_id, message_ts):
-        session = self.Session()
-        try:
-            dedup_record = SlackMessageDeduplication(channel_id=channel_id, message_ts=message_ts)
-            session.add(dedup_record)
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            raise e
         finally:
             session.close()
 
