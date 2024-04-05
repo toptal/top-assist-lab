@@ -7,12 +7,7 @@ from slack_sdk.socket_mode.request import SocketModeRequest
 from slack_sdk.socket_mode import SocketModeClient
 from configuration import api_host, api_port
 import requests
-import os
 from slack.reaction_manager import process_checkmark_added_event, process_bookmark_added_event
-
-
-host = os.environ.get("NUR_API_HOST", api_host)
-port = os.environ.get("NUR_API_PORT", api_port)
 
 
 class ChannelMessageHandler(SlackEventHandler):
@@ -103,7 +98,7 @@ class ChannelMessageHandler(SlackEventHandler):
             # publish question event to the persist queue
             try:
                 # Make an API call to publish the question
-                response = requests.post(f'http://{host}:{port}/api/v1/questions/', json=question_event)
+                response = requests.post(f'http://{api_host}:{api_port}/api/v1/questions/', json=question_event)
                 response.raise_for_status()
                 logging.info(f"Question event published: {question_event}")
 
@@ -125,7 +120,7 @@ class ChannelMessageHandler(SlackEventHandler):
             # publish feedback event to the persist queue
             try:
                 # Make an API call to publish the feedback
-                response = requests.post(f'http://{host}:{port}/api/v1/feedback/', json=feedback_event)
+                response = requests.post(f'http://{api_host}:{api_port}/api/v1/feedback/', json=feedback_event)
                 response.raise_for_status()
                 logging.info(f"Feedback published: {feedback_event}")
             except Exception as e:
