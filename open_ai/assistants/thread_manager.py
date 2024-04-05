@@ -1,8 +1,9 @@
 # ./oai_assistants/thread_manager.py
 import time
 import json
-from context.prepare_context import get_context
+from openai import OpenAI
 
+from context.prepare_context import get_context
 
 class ThreadManager:
     """
@@ -15,7 +16,7 @@ class ThreadManager:
     Attributes:
     client (OpenAI_Client): An instance of the client used for handling thread operations.
     """
-    def __init__(self, client, assistant_id, thread_id=None):
+    def __init__(self, client: OpenAI, assistant_id, thread_id=None):
         """
         Initializes the ThreadManager with a client to manage threads.
 
@@ -69,7 +70,7 @@ class ThreadManager:
                 # If the run was successful, display messages as usual
                 self.display_messages(messages)
                 print("\nAssistant run completed.")
-                break
+                return messages, self.thread_id
             elif run_status.status == "failed":
                 print("\nAssistant run failed.")
                 # If there's a last_error, use it to inform the user
@@ -93,8 +94,6 @@ class ThreadManager:
             else:
                 print("Waiting for run to complete...")
                 time.sleep(5)  # Adjust sleep time as needed
-
-        return messages, self.thread_id
 
     def check_run_status(self, run_id):
         """
