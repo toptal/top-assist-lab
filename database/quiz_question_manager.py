@@ -1,28 +1,19 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
-from configuration import sql_file_path
 from datetime import datetime, timezone
 from sqlalchemy.exc import SQLAlchemyError
 from interactions.quiz_question_dto import QuizQuestionDTO
 from models.quiz_question import QuizQuestion
-
-Base = declarative_base()
+from database.database import Database
 
 
 class QuizQuestionManager:
     def __init__(self):
-        # Initialize the database engine
-        self.engine = create_engine('sqlite:///' + sql_file_path)
-        Base.metadata.create_all(self.engine)  # Create tables if they don't exist
-        self.Session = sessionmaker(bind=self.engine)
+        self.db = Database()
 
     def add_quiz_question(self, question_text):
         try:
-            with self.Session() as session:
+            with self.db.get_session() as session:
                 new_question = QuizQuestion(question_text=question_text, posted_on_slack=datetime.now(timezone.utc))
-                session.add(new_question)
-                session.commit()
+                self.db.add_object(new_question)
                 # Convert and return a QuizQuestionDTO object
                 return QuizQuestionDTO(
                     id=new_question.id,
@@ -38,7 +29,7 @@ class QuizQuestionManager:
 
     def update_with_summary(self, question_id, summary):
         try:
-            with self.Session() as session:
+            with self.db.get_session() as session:
                 question = session.query(QuizQuestion).filter_by(id=question_id).first()
                 if question:
                     question.summary = summary
@@ -48,7 +39,7 @@ class QuizQuestionManager:
 
     def update_with_summary_by_thread_id(self, thread_id, summary):
         try:
-            with self.Session() as session:
+            with self.db.get_session() as session:
                 question = session.query(QuizQuestion).filter_by(thread_id=thread_id).first()
                 print(f"question: {question}")
                 if question:
@@ -60,7 +51,7 @@ class QuizQuestionManager:
 
     def update_with_thread_id(self, question_id, thread_id):
         try:
-            with self.Session() as session:
+            with self.db.get_session() as session:
                 question = session.query(QuizQuestion).filter_by(id=question_id).first()
                 if question:
                     question.thread_id = thread_id
@@ -71,7 +62,7 @@ class QuizQuestionManager:
 
     def update_confluence_timestamp(self, question_id):
         try:
-            with self.Session() as session:
+            with self.db.get_session() as session:
                 question = session.query(QuizQuestion).filter_by(id=question_id).first()
                 if question:
                     question.posted_on_confluence = datetime.now(timezone.utc)
@@ -82,7 +73,7 @@ class QuizQuestionManager:
     # get all thread_ids for questions that have not been posted on Confluence
     def get_unposted_questions_timestamps(self):
         try:
-            with self.Session() as session:
+            with self.db.get_session() as session:
                 questions = session.query(QuizQuestion).filter_by(posted_on_confluence=None).all()
                 return [question.thread_id for question in questions]
         except SQLAlchemyError as e:

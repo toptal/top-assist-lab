@@ -1,6 +1,7 @@
 # ./database/interaction_manager.py
 from datetime import datetime, timezone
 from models.qa_interaction import QAInteraction
+from sqlalchemy.exc import SQLAlchemyError
 from database.database import Database
 import json
 
@@ -25,7 +26,7 @@ class QAInteractionManager:
                 slack_user_id=slack_user_id
             )
             self.db.add_object(interaction)
-        except Exception as e:
+        except SQLAlchemyError as e:
             print(f"Error adding question and answer: {e}")
             self.db.rollback()
             return
@@ -41,7 +42,7 @@ class QAInteractionManager:
                     comments.append(comment)
                     interaction.comments = json.dumps(comments)
                     session.commit()
-            except Exception as e:
+            except SQLAlchemyError as e:
                 print(f"Error adding comment to interaction: {e}")
                 raise e
 
@@ -49,28 +50,28 @@ class QAInteractionManager:
         try:
             with self.db.get_session() as session:
                 return session.query(QAInteraction).filter_by(thread_id=thread_id).first()
-        except Exception as e:
+        except SQLAlchemyError as e:
             print(f"Error getting interaction by thread ID: {e}")
 
     def get_interaction_by_interaction_id(self, interaction_id):
         try:
             with self.db.get_session() as session:
                 return session.query(QAInteraction).filter_by(interaction_id=interaction_id).first()
-        except Exception as e:
+        except SQLAlchemyError as e:
             print(f"Error getting interaction by interaction ID: {e}")
 
     def get_interactions_by_interaction_ids(self, interaction_ids):
         try:
             with self.db.get_session() as session:
                 return session.query(QAInteraction).filter(QAInteraction.interaction_id.in_(interaction_ids)).all()
-        except Exception as e:
+        except SQLAlchemyError as e:
             print(f"Error getting interactions by interaction IDs: {e}")
 
     def get_qa_interactions(self):
         try:
             with self.db.get_session() as session:
                 return session.query(QAInteraction).all()
-        except Exception as e:
+        except SQLAlchemyError as e:
             print(f"Error getting QA interactions: {e}")
 
     def add_embed_to_interaction(self, interaction_id, embed):
@@ -81,7 +82,7 @@ class QAInteractionManager:
                     interaction.embed = json.dumps(embed)
                     interaction.last_embedded = datetime.now(timezone.utc)
                     session.commit()
-        except Exception as e:
+        except SQLAlchemyError as e:
             print(f"Error adding embed to interaction: {e}")
             self.db.rollback()
             return
@@ -94,7 +95,7 @@ class QAInteractionManager:
                     (QAInteraction.embed == json.dumps([])) |
                     (QAInteraction.embed == '')
                 ).all()
-        except Exception as e:
+        except SQLAlchemyError as e:
             print(f"Error getting interactions without embeds: {e}")
 
     def get_interactions_with_embeds(self):
@@ -106,5 +107,5 @@ class QAInteractionManager:
                     (QAInteraction.embed == json.dumps([])) |
                     (QAInteraction.embed == '')
                 ).all()
-        except Exception as e:
+        except SQLAlchemyError as e:
             print(f"Error getting interactions with embeds: {e}")
