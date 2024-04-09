@@ -7,30 +7,11 @@ from configuration import sql_file_path
 from datetime import datetime, timezone
 import json
 from sqlalchemy.exc import SQLAlchemyError
+from models.page_data import PageData
 
 
 # Define the base class for SQLAlchemy models
 Base = declarative_base()
-
-
-# Define the PageData model
-class PageData(Base):
-    """
-    SQLAlchemy model for storing Confluence page data.
-    """
-    __tablename__ = 'page_data'
-
-    id = Column(Integer, primary_key=True)
-    page_id = Column(String)
-    space_key = Column(String)
-    title = Column(String)
-    author = Column(String)
-    createdDate = Column(DateTime)
-    lastUpdated = Column(DateTime)
-    content = Column(Text)
-    comments = Column(Text, default=json.dumps([]))
-    last_embedded = Column(DateTime)
-    embed = Column(Text, default=json.dumps([]))
 
 
 def parse_datetime(date_string):

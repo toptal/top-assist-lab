@@ -1,24 +1,13 @@
 # ./database/space_manager.py
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 from configuration import sql_file_path
-
+from models.space_info import SpaceInfo
 
 Base = declarative_base()
 
-
-class SpaceInfo(Base):
-    """
-    SQLAlchemy model for storing Confluence space data.
-    """
-    __tablename__ = 'space_info'
-
-    id = Column(Integer, primary_key=True)
-    space_key = Column(String, nullable=False)
-    space_name = Column(String, nullable=False)
-    last_import_date = Column(DateTime, nullable=False)
 
 def init_db():
     engine = create_engine('sqlite:///' + sql_file_path)

@@ -10,8 +10,8 @@ from open_ai.embedding.embed_manager import embed_text
 from open_ai.assistants.utility import extract_assistant_response, initiate_client
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
-from database.interaction_manager import QAInteractionManager, QAInteractions
-from database.quiz_question_manager import QuizQuestionManager, QuizQuestion
+from database.interaction_manager import QAInteractionManager, QAInteraction
+from database.quiz_question_manager import QuizQuestionManager
 from slack.message_manager import post_questions_to_slack
 
 
@@ -60,7 +60,7 @@ def retrieve_relevant_interaction_ids(query: str) -> List[str]:
     return interaction_ids
 
 
-def format_interactions(interactions: List['QAInteractions']) -> Tuple[str, List[str]]:
+def format_interactions(interactions: List['QAInteraction']) -> Tuple[str, List[str]]:
     """
     Format a list of QAInteraction objects into a human-readable string and collect user IDs.
 
@@ -69,7 +69,7 @@ def format_interactions(interactions: List['QAInteractions']) -> Tuple[str, List
     If comments deserialization fails, it defaults to an empty list.
 
     Parameters:
-    interactions (List[QAInteractions]): A list of QAInteraction objects.
+    interactions (List[QAInteraction]): A list of QAInteraction objects.
 
     Returns:
     Tuple[str, List[str]]: A tuple containing a string of formatted interactions and a list of user IDs.

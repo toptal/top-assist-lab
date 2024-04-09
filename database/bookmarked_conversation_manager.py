@@ -2,8 +2,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from configuration import sql_file_path
-from database.bookmarked_conversation import BookmarkedConversation, Base
+from sqlalchemy.ext.declarative import declarative_base
+from models.bookmarked_conversation import BookmarkedConversation
 from datetime import datetime, timezone
+
+Base = declarative_base()
+
 
 class BookmarkedConversationManager:
     def __init__(self):

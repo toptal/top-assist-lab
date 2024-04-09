@@ -1,7 +1,8 @@
 # ./database/interaction_manager.py
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime, timezone
+from models.qa_interaction import QAInteraction
 import json
 
 from configuration import sql_file_path
@@ -9,22 +10,6 @@ from configuration import sql_file_path
 
 # Define the base class for SQLAlchemy models
 Base = declarative_base()
-
-
-class QAInteractions(Base):
-    __tablename__ = 'qa_interactions'
-    interaction_id = Column(Integer, primary_key=True)
-    question_text = Column(Text)
-    thread_id = Column(String)
-    assistant_thread_id = Column(String)
-    answer_text = Column(Text)
-    channel_id = Column(String)
-    slack_user_id = Column(String)
-    question_timestamp = Column(DateTime)
-    answer_timestamp = Column(DateTime)
-    comments = Column(Text, default=json.dumps([]))
-    last_embedded = Column(DateTime)
-    embed = Column(Text, default=json.dumps([]))
 
 
 class QAInteractionManager:
@@ -37,7 +22,7 @@ class QAInteractionManager:
         session = self.Session()
         try:
             serialized_answer = json.dumps(answer.__dict__) if not isinstance(answer, str) else answer
-            interaction = QAInteractions(
+            interaction = QAInteraction(
                 question_text=question,
                 thread_id=thread_id,
                 assistant_thread_id=assistant_thread_id,
@@ -59,7 +44,7 @@ class QAInteractionManager:
     def add_comment_to_interaction(self, thread_id, comment):
         session = self.Session()
         try:
-            interaction = session.query(QAInteractions).filter_by(thread_id=thread_id).first()
+            interaction = session.query(QAInteraction).filter_by(thread_id=thread_id).first()
             if interaction:
                 if interaction.comments is None:
                     interaction.comments = json.dumps([])
@@ -76,22 +61,22 @@ class QAInteractionManager:
     def get_interaction_by_thread_id(self, thread_id):
         session = self.Session()
         try:
-            return session.query(QAInteractions).filter_by(thread_id=thread_id).first()
+            return session.query(QAInteraction).filter_by(thread_id=thread_id).first()
         finally:
             session.close()
 
     def get_interaction_by_interaction_id(self, interaction_id):
         session = self.Session()
         try:
-            return session.query(QAInteractions).filter_by(interaction_id=interaction_id).first()
+            return session.query(QAInteraction).filter_by(interaction_id=interaction_id).first()
         finally:
             session.close()
 
     def get_interactions_by_interaction_ids(self, interaction_ids):
         session = self.Session()
         try:
-            # The query filters QAInteractions by checking if the interaction_id is in the list of interaction_ids
-            return session.query(QAInteractions).filter(QAInteractions.interaction_id.in_(interaction_ids)).all()
+            # The query filters QAInteraction by checking if the interaction_id is in the list of interaction_ids
+            return session.query(QAInteraction).filter(QAInteraction.interaction_id.in_(interaction_ids)).all()
         except Exception as e:
             session.rollback()
             raise e
@@ -101,21 +86,21 @@ class QAInteractionManager:
     def get_qa_interactions(self):
         session = self.Session()
         try:
-            return session.query(QAInteractions).all()
+            return session.query(QAInteraction).all()
         finally:
             session.close()
 
     def get_all_interactions(self):
         session = self.Session()
         try:
-            return session.query(QAInteractions).all()
+            return session.query(QAInteraction).all()
         finally:
             session.close()
 
     def add_embed_to_interaction(self, interaction_id, embed):
         session = self.Session()
         try:
-            interaction = session.query(QAInteractions).filter_by(interaction_id=interaction_id).first()
+            interaction = session.query(QAInteraction).filter_by(interaction_id=interaction_id).first()
             if interaction:
                 interaction.embed = json.dumps(embed)
                 interaction.last_embedded = datetime.now(timezone.utc)
@@ -130,10 +115,10 @@ class QAInteractionManager:
         session = self.Session()
         try:
             # Filter interactions where embed is either None, the JSON representation of an empty list, or an empty string
-            return session.query(QAInteractions).filter(
-                (QAInteractions.embed.is_(None)) |
-                (QAInteractions.embed == json.dumps([])) |
-                (QAInteractions.embed == '')
+            return session.query(QAInteraction).filter(
+                (QAInteraction.embed.is_(None)) |
+                (QAInteraction.embed == json.dumps([])) |
+                (QAInteraction.embed == '')
             ).all()
         finally:
             session.close()
@@ -142,10 +127,10 @@ class QAInteractionManager:
         session = self.Session()
         try:
             # Filter interactions where embed is either None, the JSON representation of an empty list, or an empty string
-            return session.query(QAInteractions).filter(
-                (QAInteractions.embed.is_not(None)) |
-                (QAInteractions.embed != json.dumps([])) |
-                (QAInteractions.embed != '')
+            return session.query(QAInteraction).filter(
+                (QAInteraction.embed.is_not(None)) |
+                (QAInteraction.embed != json.dumps([])) |
+                (QAInteraction.embed != '')
             ).all()
         finally:
             session.close()
