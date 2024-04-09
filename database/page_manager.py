@@ -66,7 +66,6 @@ class PageManager:
         :return: Tuple of page_ids (list of page IDs), all_documents (list of document strings), and embeddings (list of embeddings as strings)
         """
         with self.db.get_session() as session:
-
             if space_key:
                 records = session.query(PageData).filter(PageData.space_key == space_key).all()
             else:
@@ -94,7 +93,6 @@ class PageManager:
             page_id (str): The ID of the page to update.
             embed_vector: The embed vector data to be added or updated, expected to be a list of floats.
         """
-        # Serialize the embed_vector to a JSON string here
         embed_vector_json = json.dumps(embed_vector)
 
         with self.db.get_session() as session:

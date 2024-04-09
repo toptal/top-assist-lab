@@ -10,7 +10,6 @@ class QAInteractionManager:
     def __init__(self):
         self.db = Database()
 
-
     def add_question_and_answer(self, question, answer, thread_id, assistant_thread_id, channel_id, question_ts,
                                 answer_ts, slack_user_id):
         try:
@@ -102,7 +101,6 @@ class QAInteractionManager:
     def get_interactions_with_embeds(self):
         try:
             with self.db.get_session() as session:
-                # Filter interactions where embed is either not None and not an empty list or empty string
                 return session.query(QAInteractions).filter(
                     (QAInteractions.embed.is_not(None)) |
                     (QAInteractions.embed == json.dumps([])) |

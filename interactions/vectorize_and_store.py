@@ -97,7 +97,7 @@ def store_interaction_embed_in_db(interaction_id, embed_response_json):
 
 
 def vectorize_interaction_and_store_in_db(interaction_id):
-    interaction = QAInteractionManager().get_interaction_by_interaction_id(interaction_id)  # Assuming this method exists and correctly fetches the interaction
+    interaction = QAInteractionManager().get_interaction_by_interaction_id(interaction_id)
     if interaction:
         formatted_interaction = format_interaction(interaction)
         embed = vectorize_interaction(formatted_interaction, embedding_model_id)

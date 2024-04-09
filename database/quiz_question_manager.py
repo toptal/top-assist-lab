@@ -14,7 +14,7 @@ class QuizQuestionManager:
             with self.db.get_session() as session:
                 new_question = QuizQuestion(question_text=question_text, posted_on_slack=datetime.now(timezone.utc))
                 self.db.add_object(new_question)
-                # Convert and return a QuizQuestionDTO object
+
                 return QuizQuestionDTO(
                     id=new_question.id,
                     question_text=new_question.question_text,

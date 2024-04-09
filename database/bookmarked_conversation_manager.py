@@ -21,6 +21,7 @@ class BookmarkedConversationManager:
                     session.commit()
         except SQLAlchemyError as e:
             print(f"Error updating conversation with Confluence timestamp: {e}")
+            return None
 
     def get_unposted_conversations(self):
         try:
