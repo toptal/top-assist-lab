@@ -3,7 +3,7 @@ import chromadb
 import json
 
 from configuration import pages_collection_name, vector_folder_path
-from database.page_manager import get_all_page_data_from_db
+from database.page_manager import PageManager
 
 # Initialize the Chroma PersistentClient for disk persistence
 client = chromadb.PersistentClient(path=vector_folder_path)
@@ -18,7 +18,7 @@ def add_to_vector(collection_name, space_key=None):
         space_key (str): The key of the space to retrieve page data from. If None, retrieves data from all spaces.
     """
     # Retrieve all documents, their corresponding IDs, and embeddings
-    page_ids, _, embeddings = get_all_page_data_from_db(space_key=space_key)
+    page_ids, _, embeddings = PageManager().get_all_page_data_from_db(space_key=space_key)
 
     # Deserialize the embeddings and filter out None values
     valid_embeddings = []

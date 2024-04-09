@@ -4,13 +4,12 @@ import requests
 import time
 
 from configuration import api_host, api_port
-from database.page_manager import get_page_ids_missing_embeds, store_pages_data
+from database.page_manager import PageManager
 from database.space_manager import SpaceManager
 from vector.create_vector_db import add_embeds_to_vector_db
 
 from .client import ConfluenceClient
 from .retriever import retrieve_space
-
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -34,7 +33,7 @@ def submit_embedding_creation_request(page_id: str):
 def generate_missing_page_embeddings(retry_limit: int = 3, wait_time: int = 5) -> None:
     for attempt in range(retry_limit):
         # Retrieve the IDs of pages that are still missing embeddings.
-        page_ids = get_page_ids_missing_embeds()
+        page_ids = PageManager().get_page_ids_missing_embeds()
         # If there are no pages missing embeddings, exit the loop and end the process.
         if not page_ids:
             logging.info("All pages have embeddings. Process complete.")
@@ -52,12 +51,11 @@ def generate_missing_page_embeddings(retry_limit: int = 3, wait_time: int = 5) -
 
         # After waiting, retrieve the list of pages still missing embeddings to see if the list has decreased.
         # This retrieval is crucial to ensure that the loop only continues if there are still pages that need processing.
-        if (page_ids := get_page_ids_missing_embeds()):
+        if page_ids := PageManager().get_page_ids_missing_embeds():
             logging.info(f"After attempt {attempt + 1}, {len(page_ids)} pages are still missing embeds.")
         else:
             logging.info("All pages now have embeddings. Process complete.")
             break  # Break out of the loop if there are no more pages missing embeddings.
-
 
     # After exhausting the retry limit, check if there are still pages without embeddings.
     if page_ids:
@@ -82,10 +80,10 @@ def tui_choose_space():
 
 
 def import_space(space_key, space_name):
-    import_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    import_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     pages = retrieve_space(space_key)
-    store_pages_data(space_key, pages)
+    PageManager().store_pages_data(space_key, pages)
     generate_missing_page_embeddings()
 
     SpaceManager().upsert_space_info(
