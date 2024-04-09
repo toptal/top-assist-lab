@@ -22,7 +22,7 @@ class ChannelMessageHandler(SlackEventHandler):
     def load_processed_data(self):
         """ Load processed messages and questions from the database """
         try:
-            interactions = self.interaction_manager.get_all_interactions()
+            interactions = self.interaction_manager.get_qa_interactions()
         except Exception as e:
             logging.error(f"Error loading processed messages and questions: {e}")
             interactions = []

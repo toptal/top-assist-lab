@@ -3,7 +3,7 @@ import json
 
 
 class QAInteraction(Base):
-    __tablename__ = 'qa_interactions'
+    __tablename__ = 'qa_interaction'
 
     interaction_id = Column(Integer, primary_key=True)
     question_text = Column(Text)
