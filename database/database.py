@@ -2,6 +2,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from configuration import db_url
+from models.qa_interaction import QAInteractions
+from models.space_info import SpaceInfo
+from models.page_data import PageData
+from models.bookmarked_conversation import BookmarkedConversation
+from models.quiz_question import QuizQuestion
 
 
 class Database:
@@ -30,7 +35,15 @@ class Database:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._init_engine()
+            cls._instance._create_tables()
         return cls._instance
+
+    def _create_tables(self):
+        """
+        Create tables in the database if they do not exist.
+        """
+        for model in [QAInteractions, SpaceInfo, PageData, BookmarkedConversation, QuizQuestion]:
+            model.metadata.create_all(self.engine)
 
     def _init_engine(self):
         """
@@ -38,10 +51,7 @@ class Database:
 
         Creates the Engine object for connecting to the database and the session factory for creating database sessions.
         """
-        # Create the SQLAlchemy engine
         self.engine = create_engine(db_url)
-
-        # Create the session factory
         self.Session = sessionmaker(bind=self.engine)
 
     def get_session(self):
@@ -52,15 +62,6 @@ class Database:
             sqlalchemy.orm.Session: A new database session.
         """
         return self.Session()
-
-    def get_engine(self):
-        """
-        Get the SQLAlchemy Engine object.
-
-        Returns:
-            sqlalchemy.engine.Engine: The SQLAlchemy Engine object.
-        """
-        return self.engine
 
     def add_object(self, obj):
         """

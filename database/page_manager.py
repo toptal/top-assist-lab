@@ -32,7 +32,7 @@ class PageManager:
         pages (list): A list of page data
         """
         for page in pages:
-            page_id = page['id']
+            page_id = page['pageId']
             new_page = PageData(page_id=page_id,
                                 space_key=space_key,
                                 title=page['title'],
@@ -75,27 +75,7 @@ class PageManager:
             formatted = self.format_page_data(records)
             return formatted
 
-    def get_page_data_from_db(self):
-        """
-        Retrieve all page data and embeddings from the database.
-        This query filter does the following:
-            PageData.lastUpdated > PageData.last_embedded:
-                It selects records where the lastUpdated timestamp is more recent than the last_embedded timestamp. This would typically mean that the page has been updated since the last time its embedding was generated and stored.
-            PageData.last_embedded.is_(None):
-                It selects records where the last_embedded field is None, which likely indicates that an embedding has never been generated for the page.
-        :return: Tuple of page_ids (list of page IDs), all_documents (list of document strings), and embeddings (list of embeddings as strings)
-        """
-        with self.db.get_session() as session:
-            records = session.query(PageData).filter(
-                (PageData.lastUpdated > PageData.last_embedded) |
-                (PageData.last_embedded.is_(None))
-            ).all()
-
-            formatted = self.format_page_data(records)
-            return formatted
-
-    @staticmethod
-    def format_page_data(records):
+    def format_page_data(self, records):
         page_ids = [record.page_id for record in records]
         embeddings = [record.embed for record in records]  # Assuming embed is directly stored as a string
         all_documents = [
@@ -125,60 +105,12 @@ class PageManager:
                     page.embed = embed_vector_json  # Store the serialized list
                     page.last_embedded = datetime.now(timezone.utc)
                     print(f"Embed vector and last_embedded timestamp for page ID {page_id} have been updated.")
+                    session.commit()
                 else:
                     print(f"No page found with ID {page_id}. Consider handling this case as needed.")
-
-                session.commit()
             except SQLAlchemyError as e:
                 session.rollback()
                 raise e
-
-    def get_page_data_by_ids(self, page_ids):
-        """
-        Retrieve specific page data from the database by page IDs.
-        :param page_ids: A list of page IDs to retrieve data for.
-        :return: Tuple of all_documents (list of document strings) and page_ids (list of page IDs)
-        """
-        if not page_ids:
-            return [], []
-
-        try:
-            with self.db.get_session() as session:
-                page_data_records = session.query(PageData).filter(PageData.page_id.in_(page_ids)).all()
-
-                all_documents = []
-                retrieved_page_ids = []
-                for record in page_data_records:
-                    document = (
-                        f"Page id: {record.page_id}, space key: {record.space_key}, title: {record.title}, "
-                        f"author: {record.author}, created date: {record.createdDate}, last updated: {record.lastUpdated}, "
-                        f"content: {record.content}, comments: {record.comments}"
-                    )
-                    all_documents.append(document)
-                    retrieved_page_ids.append(record.page_id)
-
-                return all_documents, retrieved_page_ids
-        except SQLAlchemyError as e:
-            print(f"Error retrieving page data by IDs: {e}")
-            return [], []
-
-    def update_embed_date(self, page_ids):
-        """
-        Update the last_embedded timestamp in the database for the given page IDs.
-        :param page_ids:
-        :return:
-        """
-        try:
-            with self.db.get_session() as session:
-                current_time = datetime.now()
-                for page_id in page_ids:
-                    session.query(PageData).filter_by(page_id=page_id).update({'last_embedded': current_time})
-                session.commit()
-                return True
-        except SQLAlchemyError as e:
-            print(f"Error updating embed date: {e}")
-            self.db.rollback()
-            return False
 
     def find_page(self, page_id) -> Optional[PageData]:
         """

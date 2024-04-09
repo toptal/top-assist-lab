@@ -13,10 +13,7 @@ class VectorInteractionManager:
 
     def add_to_vector(self):
         collection_name = interactions_collection_name
-
-        # Get interactions with embedings
-        qa_interaction_manager = QAInteractionManager()
-        interactions = qa_interaction_manager.get_interactions_with_embeds()
+        interactions = QAInteractionManager().get_interactions_with_embeds()
 
         interaction_ids = []
         interaction_embeddings = []

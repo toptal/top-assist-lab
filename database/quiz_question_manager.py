@@ -60,17 +60,6 @@ class QuizQuestionManager:
         except SQLAlchemyError as e:
             print(f"Error updating quiz question with thread ID: {e}")
 
-    def update_confluence_timestamp(self, question_id):
-        try:
-            with self.db.get_session() as session:
-                question = session.query(QuizQuestion).filter_by(id=question_id).first()
-                if question:
-                    question.posted_on_confluence = datetime.now(timezone.utc)
-                    session.commit()
-        except SQLAlchemyError as e:
-            print(f"Error updating Confluence timestamp: {e}")
-
-    # get all thread_ids for questions that have not been posted on Confluence
     def get_unposted_questions_timestamps(self):
         try:
             with self.db.get_session() as session:

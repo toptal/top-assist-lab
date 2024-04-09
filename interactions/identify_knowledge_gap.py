@@ -10,7 +10,7 @@ from open_ai.embedding.embed_manager import embed_text
 from open_ai.assistants.utility import extract_assistant_response, initiate_client
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
-from database.interaction_manager import QAInteractionManager, QAInteraction
+from database.interaction_manager import QAInteractionManager, QAInteractions
 from database.quiz_question_manager import QuizQuestionManager
 from slack.message_manager import post_questions_to_slack
 
@@ -60,7 +60,7 @@ def retrieve_relevant_interaction_ids(query: str) -> List[str]:
     return interaction_ids
 
 
-def format_interactions(interactions: List['QAInteraction']) -> Tuple[str, List[str]]:
+def format_interactions(interactions: List['QAInteractions']) -> Tuple[str, List[str]]:
     """
     Format a list of QAInteraction objects into a human-readable string and collect user IDs.
 
@@ -182,21 +182,18 @@ def process_and_store_questions(assistant_response_json):
     Returns:
         list[QuizQuestionDTO]: A list of QuizQuestionDTO objects added to the database.
     """
-    # Parse the JSON response
     try:
         questions_data = json.loads(assistant_response_json)
     except json.JSONDecodeError as e:
         logging.error(f"Error decoding JSON: {e}")
         return []
 
-    # Initialize the QuizQuestionManager
     quiz_question_manager = QuizQuestionManager()
 
     quiz_question_dtos = []
     for item in questions_data:
         question_text = item.get("Question")
         if question_text:
-            # Add the question to the database and directly collect the QuizQuestion object
             quiz_question_dto = quiz_question_manager.add_quiz_question(question_text=question_text)
             if quiz_question_dto:
                 quiz_question_dtos.append(quiz_question_dto)
@@ -234,8 +231,7 @@ def strip_json(assistant_response):
 def identify_knowledge_gaps(context):
     query = f"no information in context: {context}"
     interaction_ids = retrieve_relevant_interaction_ids(query)
-    qa_interaction_manager = QAInteractionManager()
-    relevant_qa_interactions = qa_interaction_manager.get_interactions_by_interaction_ids(interaction_ids)
+    relevant_qa_interactions = QAInteractionManager().get_interactions_by_interaction_ids(interaction_ids)
     formatted_interactions, user_ids = format_interactions(relevant_qa_interactions)
     assistant_response, thread_ids = query_assistant_with_context(context, formatted_interactions)
     questions_json = strip_json(assistant_response)

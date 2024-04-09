@@ -57,8 +57,7 @@ def main_menu():
         elif choice == "3":
             print("Creating vector db for interactions")
             vectorize_interactions_and_store_in_db()
-            vector_interaction_manager = VectorInteractionManager()
-            vector_interaction_manager.add_to_vector()
+            VectorInteractionManager().add_to_vector()
 
         elif choice == "4":
             load_manage_assistants()

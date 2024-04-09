@@ -2,8 +2,8 @@ from .base import *
 import json
 
 
-class QAInteraction(Base):
-    __tablename__ = 'qa_interaction'
+class QAInteractions(Base):
+    __tablename__ = 'qa_interactions'
 
     interaction_id = Column(Integer, primary_key=True)
     question_text = Column(Text)
