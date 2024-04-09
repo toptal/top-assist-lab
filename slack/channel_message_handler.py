@@ -1,14 +1,16 @@
 import logging
-from slack_sdk.socket_mode.response import SocketModeResponse
-from database.interaction_manager import QAInteractionManager
-from slack.event_handler import SlackEventHandler
-from slack_sdk import WebClient
-from slack_sdk.socket_mode.request import SocketModeRequest
-from slack_sdk.socket_mode import SocketModeClient
-from configuration import api_host, api_port
 import requests
-from slack.reaction_manager import process_checkmark_added_event, process_bookmark_added_event
 
+from slack_sdk import WebClient
+from slack_sdk.socket_mode import SocketModeClient
+from slack_sdk.socket_mode.request import SocketModeRequest
+from slack_sdk.socket_mode.response import SocketModeResponse
+
+from configuration import api_host, api_port, slack_require_enterprise_id, slack_require_team_id
+from database.interaction_manager import QAInteractionManager
+
+from .event_handler import SlackEventHandler
+from .reaction_manager import process_checkmark_added_event, process_bookmark_added_event
 
 class ChannelMessageHandler(SlackEventHandler):
     """Handles incoming messages from the channel and publishes questions and feedback to the persist queue"""
@@ -39,10 +41,26 @@ class ChannelMessageHandler(SlackEventHandler):
                 except Exception as e:
                     logging.error(f"Error adding question to interaction: {e}")
 
+    def is_authorized(self, enterprise_id: str, team_id: str) -> bool:
+        """Authorize the request based on the enterprise_id and team_id"""
+        if slack_require_enterprise_id and slack_require_enterprise_id != enterprise_id:
+            return False
+
+        if slack_require_team_id and slack_require_team_id != team_id:
+            return False
+
+        return True
+
     def handle(self, client: SocketModeClient, req: SocketModeRequest, web_client: WebClient, bot_user_id: str):
         """Handle incoming messages from the channel and publish questions and feedback to the persist queue"""
         # Acknowledge the event immediately
         client.send_socket_mode_response(SocketModeResponse(envelope_id=req.envelope_id))
+
+        enterprise_id = req.payload.get("enterprise_id", None)
+        team_id = req.payload.get("team_id", None)
+        if not self.is_authorized(enterprise_id, team_id):
+            logging.error(f"Unauthorized enterprise_id {enterprise_id} or team_id {team_id}. Skipping.\n")
+            return
 
         event = req.payload.get("event", {})
         ts = event.get("ts", "")  # Unique 'ts' for each message
