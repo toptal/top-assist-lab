@@ -13,16 +13,18 @@ class QuizQuestionManager:
         try:
             with self.db.get_session() as session:
                 new_question = QuizQuestion(question_text=question_text, posted_on_slack=datetime.now(timezone.utc))
-                self.db.add_object(new_question)
+                session.add(new_question)
+                session.commit()
 
                 return QuizQuestionDTO(
-                    id=new_question.id,
+                    question_id=new_question.id,
                     question_text=new_question.question_text,
                     thread_id=new_question.thread_id,
                     summary=new_question.summary,
                     posted_on_slack=new_question.posted_on_slack,
                     posted_on_confluence=new_question.posted_on_confluence
                 )
+
         except SQLAlchemyError as e:
             print(f"Error adding quiz question: {e}")
             return None

@@ -140,7 +140,6 @@ def process_bookmark_added_event(slack_web_client, event):
             bookmarked_conversation_manager.add_bookmarked_conversation(title=title, body=body, thread_id=item_ts)
             print(f"Bookmarked conversation added to the database: {title}")
 
-
             # Add conversation on confluence
             create_page_on_confluence(title, body)
             bookmarked_conversation_manager.update_posted_on_confluence(item_ts)

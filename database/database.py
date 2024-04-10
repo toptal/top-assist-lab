@@ -82,7 +82,7 @@ class Database:
             with self.get_session() as session:
                 session.add(obj)
                 session.commit()
-                return obj.id
+                return obj
         except SQLAlchemyError as e:
             class_name = obj.__class__.__name__
             print(f"Error adding object of type {class_name}: {e}")

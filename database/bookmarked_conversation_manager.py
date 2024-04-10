@@ -10,7 +10,7 @@ class BookmarkedConversationManager:
 
     def add_bookmarked_conversation(self, title, body, thread_id):
         new_conversation = BookmarkedConversation(title=title, body=body, thread_id=thread_id)
-        return self.db.add_object(new_conversation)
+        self.db.add_object(new_conversation)
 
     def update_posted_on_confluence(self, thread_id):
         try:

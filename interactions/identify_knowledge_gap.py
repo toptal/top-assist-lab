@@ -197,7 +197,6 @@ def process_and_store_questions(assistant_response_json):
             quiz_question_dto = quiz_question_manager.add_quiz_question(question_text=question_text)
             if quiz_question_dto:
                 quiz_question_dtos.append(quiz_question_dto)
-
     return quiz_question_dtos
 
 
