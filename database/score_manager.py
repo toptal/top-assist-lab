@@ -16,8 +16,8 @@ class ScoreManager:
         if slack_user_id == self.bot_user_id:
             print("Skipping score update for bot user.")
             return
-        with self.db.get_session() as session:
-            try:
+        try:
+            with self.db.get_session() as session:
                 user_score = session.query(UserScore).filter_by(slack_user_id=slack_user_id).first()
                 if not user_score:
                     # If the user score does not exist, create a new one with default scores initialized to 0
@@ -35,9 +35,10 @@ class ScoreManager:
                     raise ValueError("Invalid category provided.")
 
                 session.commit()
-            except SQLAlchemyError as e:
-                self.db.rollback()
-                raise e
+        except SQLAlchemyError as e:
+            print(f"Error adding or updating score: {e}")
+            session.rollback()
+            raise e
 
     def get_top_users(self, category, top_n=10):
         """

@@ -12,28 +12,24 @@ class QAInteractionManager:
 
     def add_question_and_answer(self, question, answer, thread_id, assistant_thread_id, channel_id, question_ts,
                                 answer_ts, slack_user_id):
-        try:
-            serialized_answer = json.dumps(answer.__dict__) if not isinstance(answer, str) else answer
-            interaction = QAInteraction(
-                question_text=question,
-                thread_id=thread_id,
-                assistant_thread_id=assistant_thread_id,
-                answer_text=serialized_answer,
-                channel_id=channel_id,
-                question_timestamp=question_ts,
-                answer_timestamp=answer_ts,
-                comments=json.dumps([]),
-                slack_user_id=slack_user_id
-            )
-            self.db.add_object(interaction)
-        except SQLAlchemyError as e:
-            print(f"Error adding question and answer: {e}")
-            self.db.rollback()
-            return
+
+        serialized_answer = json.dumps(answer.__dict__) if not isinstance(answer, str) else answer
+        interaction = QAInteraction(
+            question_text=question,
+            thread_id=thread_id,
+            assistant_thread_id=assistant_thread_id,
+            answer_text=serialized_answer,
+            channel_id=channel_id,
+            question_timestamp=question_ts,
+            answer_timestamp=answer_ts,
+            comments=json.dumps([]),
+            slack_user_id=slack_user_id
+        )
+        self.db.add_object(interaction)
 
     def add_comment_to_interaction(self, thread_id, comment):
-        with self.db.get_session() as session:
-            try:
+        try:
+            with self.db.get_session() as session:
                 interaction = session.query(QAInteraction).filter_by(thread_id=thread_id).first()
                 if interaction:
                     if interaction.comments is None:
@@ -42,9 +38,9 @@ class QAInteractionManager:
                     comments.append(comment)
                     interaction.comments = json.dumps(comments)
                     session.commit()
-            except SQLAlchemyError as e:
-                print(f"Error adding comment to interaction: {e}")
-                raise e
+        except SQLAlchemyError as e:
+            print(f"Error adding comment to interaction: {e}")
+            raise e
 
     def get_interaction_by_thread_id(self, thread_id):
         try:
@@ -84,7 +80,7 @@ class QAInteractionManager:
                     session.commit()
         except SQLAlchemyError as e:
             print(f"Error adding embed to interaction: {e}")
-            self.db.rollback()
+            session.rollback()
             return
 
     def get_interactions_without_embeds(self):

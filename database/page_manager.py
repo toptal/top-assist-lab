@@ -95,8 +95,8 @@ class PageManager:
         """
         embed_vector_json = json.dumps(embed_vector)
 
-        with self.db.get_session() as session:
-            try:
+        try:
+            with self.db.get_session() as session:
                 page = session.query(PageData).filter_by(page_id=page_id).first()
 
                 if page:
@@ -106,9 +106,9 @@ class PageManager:
                     session.commit()
                 else:
                     print(f"No page found with ID {page_id}. Consider handling this case as needed.")
-            except SQLAlchemyError as e:
-                session.rollback()
-                raise e
+        except SQLAlchemyError as e:
+            session.rollback()
+            raise e
 
     def find_page(self, page_id) -> Optional[PageData]:
         """

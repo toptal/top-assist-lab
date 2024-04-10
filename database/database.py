@@ -86,19 +86,5 @@ class Database:
         except SQLAlchemyError as e:
             class_name = obj.__class__.__name__
             print(f"Error adding object of type {class_name}: {e}")
+            session.rollback()
             return None
-
-    def rollback(self):
-        """
-        Rollback the current transaction.
-
-        This method rolls back the current transaction in the active session.
-
-        Raises:
-            SQLAlchemyError: If an error occurs while rolling back the transaction.
-        """
-        try:
-            self.get_session().rollback()
-        except SQLAlchemyError as e:
-            print(f"Error rolling back transaction: {e}")
-            raise e
