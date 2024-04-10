@@ -1,11 +1,9 @@
 # ./slack/message_manager.py
 from slack_sdk import WebClient
 from credentials import slack_bot_user_oauth_token
+from database.score_manager import ScoreManager
 from database.quiz_question_manager import QuizQuestionManager
 from interactions.quiz_question_dto import QuizQuestionDTO
-
-# Assuming the ScoreManager class and add_or_update_score method exist
-from gamification.score_manager import ScoreManager
 from slack_sdk.errors import SlackApiError
 
 
@@ -26,7 +24,7 @@ def post_questions_to_slack(channel_id, quiz_question_dtos, user_ids):
 
     client = WebClient(token=slack_bot_user_oauth_token)
     quiz_question_manager = QuizQuestionManager()
-    score_manager = ScoreManager()  # Initialize the ScoreManager
+    score_manager = ScoreManager()
 
     for quiz_question_dto in quiz_question_dtos:
         try:

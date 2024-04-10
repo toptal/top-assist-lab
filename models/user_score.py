@@ -1,4 +1,4 @@
-from models.base import *
+from .base import *
 
 
 class UserScore(Base):

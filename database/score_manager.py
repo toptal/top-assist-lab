@@ -1,4 +1,4 @@
-from .models.user_score import UserScore
+from models.user_score import UserScore
 from slack.client import get_bot_user_id
 from database.database import Database
 from sqlalchemy.exc import SQLAlchemyError

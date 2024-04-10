@@ -3,11 +3,12 @@ from open_ai.chat.format_knowledge_gathering import query_gpt_4t_with_context
 import json
 import re
 from confluence.system_knowledge_manager import create_page_on_confluence
-from gamification.score_manager import ScoreManager
+from database.score_manager import ScoreManager
 from slack.event_consumer import get_user_name_from_id
 from slack_sdk.errors import SlackApiError
 from database.bookmarked_conversation_manager import BookmarkedConversationManager
 from slack.message_manager import get_message_replies
+
 
 def get_top_users_by_category(slack_web_client):
     score_manager = ScoreManager()
@@ -68,7 +69,6 @@ def process_checkmark_added_event(slack_web_client, event):
         channel = event.get("item", {}).get("channel")
         knowledge_gathering_messages = get_message_replies(slack_web_client, channel, item_ts)
 
-        # Assuming ScoreManager or similar exists for managing scores
         score_manager = ScoreManager()
 
         # Extract unique user IDs from the replies

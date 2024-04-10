@@ -7,7 +7,7 @@ from models.space_info import SpaceInfo
 from models.page_data import PageData
 from models.bookmarked_conversation import BookmarkedConversation
 from models.quiz_question import QuizQuestion
-from gamification.models.user_score import UserScore
+from models.user_score import UserScore
 
 
 class Database:
