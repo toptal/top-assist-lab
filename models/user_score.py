@@ -1,7 +1,13 @@
-from .base import *
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
+
+Base = declarative_base()
 
 
 class UserScore(Base):
+    """
+    SQLAlchemy model for storing user scores.
+    """
     __tablename__ = 'user_scores'
 
     id = Column(Integer, primary_key=True)
