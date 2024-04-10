@@ -15,8 +15,8 @@ class QuizQuestionManager:
                 new_question = QuizQuestion(question_text=question_text, posted_on_slack=datetime.now(timezone.utc))
                 session.add(new_question)
                 session.commit()
-
-                return QuizQuestionDTO(
+                print(f"New question ID: {new_question.id}")
+                dto = QuizQuestionDTO(
                     question_id=new_question.id,
                     question_text=new_question.question_text,
                     thread_id=new_question.thread_id,
@@ -24,6 +24,9 @@ class QuizQuestionManager:
                     posted_on_slack=new_question.posted_on_slack,
                     posted_on_confluence=new_question.posted_on_confluence
                 )
+
+                print(f"DTO: {dto.id}")
+                return dto
 
         except SQLAlchemyError as e:
             print(f"Error adding quiz question: {e}")

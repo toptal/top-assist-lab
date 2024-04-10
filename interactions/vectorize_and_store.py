@@ -151,11 +151,11 @@ def vectorize_interactions_and_store_in_db(retry_limit: int = 3, wait_time: int 
         for interaction in interactions:
             try:
                 # Attempt to vectorize and store each interaction.
-                submit_create_interaction_embeds_request(str(interaction.interaction_id))
+                submit_create_interaction_embeds_request(str(interaction.id))
                 # A brief delay between processing to manage load.
                 time.sleep(0.5)
             except Exception as e:
-                logging.error(f"An error occurred while vectorizing interaction with ID {interaction.interaction_id}: {e}")
+                logging.error(f"An error occurred while vectorizing interaction with ID {interaction.id}: {e}")
 
         print(f"Waiting for {wait_time} seconds for embeddings to be processed...")
         time.sleep(wait_time)

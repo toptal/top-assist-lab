@@ -18,7 +18,7 @@ class VectorInteractionManager:
         interaction_ids = []
         interaction_embeddings = []
         for interaction in interactions:
-            interaction_ids.append(str(interaction.interaction_id))
+            interaction_ids.append(str(interaction.id))
             interaction_embeddings.append(json.loads(interaction.embed))
 
         # Ensure the collection exists

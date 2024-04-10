@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from configuration import db_url
-from models.qa_interaction import QAInteractions
+from models.qa_interaction import QAInteraction
 from models.space_info import SpaceInfo
 from models.page_data import PageData
 from models.bookmarked_conversation import BookmarkedConversation
@@ -43,7 +43,7 @@ class Database:
         """
         Create tables in the database if they do not exist.
         """
-        for model in [QAInteractions, SpaceInfo, PageData, BookmarkedConversation, QuizQuestion, UserScore]:
+        for model in [QAInteraction, SpaceInfo, PageData, BookmarkedConversation, QuizQuestion, UserScore]:
             model.metadata.create_all(self.engine)
 
     def _init_engine(self):
