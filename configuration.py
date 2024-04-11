@@ -69,5 +69,5 @@ system_confluence_knowledge_space = system_knowledge_space_private
 knowledge_gap_discussions_channel_id = os.environ.get("SLACK_CHANNEL_ID_KNOWLEDGE_GAP_DISCUSSIONS")
 
 # Authorized Slack environments
-slack_require_enterprise_id = os.environ.get("SLACK_REQUIRE_ENTERPRISE_ID", None)
-slack_require_team_id = os.environ.get("SLACK_REQUIRE_TEAM_ID", None)
+slack_allow_enterprise_id = os.environ.get("SLACK_ALLOW_ENTERPRISE_ID")
+slack_allow_team_id = os.environ.get("SLACK_ALLOW_TEAM_ID")
