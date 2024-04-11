@@ -9,7 +9,7 @@ from database.page_manager import PageManager
 client = chromadb.PersistentClient(path=vector_folder_path)
 
 
-def add_to_vector(collection_name, db_session, space_key=None):
+def add_to_vector(collection_name, session, space_key=None):
     """
     Retrieves all page data from the database, uses the stored embeddings, and adds them to the vector store.
 
@@ -18,7 +18,7 @@ def add_to_vector(collection_name, db_session, space_key=None):
         space_key (str): The key of the space to retrieve page data from. If None, retrieves data from all spaces.
     """
     # Retrieve all documents, their corresponding IDs, and embeddings
-    page_ids, _, embeddings = PageManager().get_all_page_data_from_db(space_key=space_key)
+    page_ids, _, embeddings = PageManager().get_all_page_data_from_db(session, space_key=space_key)
 
     # Deserialize the embeddings and filter out None values
     valid_embeddings = []
@@ -61,11 +61,11 @@ def add_to_vector(collection_name, db_session, space_key=None):
         print(f"Error adding embeddings to the collection: {e}")
 
 
-def add_embeds_to_vector_db(db_session, space_key=None):
+def add_embeds_to_vector_db(session, space_key=None):
     """
     Adds the embeddings to the vector database.
     """
     collection_name = pages_collection_name
-    print(f"Session: {db_session}")
-    add_to_vector(collection_name, db_session, space_key=space_key)
+    print(f"Session: {session}")
+    add_to_vector(collection_name, session, space_key=space_key)
     print(f"Embeddings added to {collection_name} collection.")

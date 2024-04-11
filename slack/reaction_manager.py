@@ -8,10 +8,11 @@ from slack.event_consumer import get_user_name_from_id
 from slack_sdk.errors import SlackApiError
 from database.bookmarked_conversation_manager import BookmarkedConversationManager
 from slack.message_manager import get_message_replies
+from database.database import get_db_session
 
 
-def get_top_users_by_category(slack_web_client, db_session):
-    score_manager = ScoreManager(db_session)
+def get_top_users_by_category(slack_web_client, session):
+    score_manager = ScoreManager(session)
     categories = ['seeker', 'revealer', 'luminary']
     top_users_by_category = {}
 
@@ -27,11 +28,11 @@ def get_top_users_by_category(slack_web_client, db_session):
     return top_users_by_category
 
 
-def post_top_users_in_categories(slack_web_client, channel):
+def post_top_users_in_categories(slack_web_client, channel, session):
     # Assuming get_top_users_by_category is implemented elsewhere and returns a dictionary
     # where keys are categories and values are lists of top users (name and score).
 
-    top_users_by_category = get_top_users_by_category(slack_web_client, db_session)
+    top_users_by_category = get_top_users_by_category(slack_web_client, session)
 
     # Format the message
     message_blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": "*Top 10 Users by Category:*"}}]
@@ -50,72 +51,73 @@ def post_top_users_in_categories(slack_web_client, channel):
         print(f"Failed to post top users message: {e.response['error']}")
 
 
-def process_checkmark_added_event(slack_web_client, event, db_session):
+def process_checkmark_added_event(slack_web_client, event):
     print(f"Reaction event identified:\n{event}")
 
-    quiz_question_manager = QuizQuestionManager(db_session)
-    timestamps = quiz_question_manager.get_unposted_questions_timestamps()
-    # Convert timestamps to strings, as Slack timestamps are string values
-    timestamps_str = [str(ts) for ts in timestamps]
-    # Extract the timestamp of the item to which the reaction was added
-    item_ts = event.get("item", {}).get("ts")
-    context = ""
-    # Check if the reaction is to an item whose timestamp is in the list of timestamps
-    if item_ts in timestamps_str:
-        print(f'\n The event refers to a knowledge gathering request\n{event}')
-        # Print the valid item timestamp to the console
-        print(f'\nEvent timestamp: {item_ts}')
-        # assign the channel to the channel where the reaction was added
-        channel = event.get("item", {}).get("channel")
-        knowledge_gathering_messages = get_message_replies(slack_web_client, channel, item_ts)
+    with get_db_session() as session:
+        quiz_question_manager = QuizQuestionManager(session)
+        timestamps = quiz_question_manager.get_unposted_questions_timestamps()
+        # Convert timestamps to strings, as Slack timestamps are string values
+        timestamps_str = [str(ts) for ts in timestamps]
+        # Extract the timestamp of the item to which the reaction was added
+        item_ts = event.get("item", {}).get("ts")
+        context = ""
+        # Check if the reaction is to an item whose timestamp is in the list of timestamps
+        if item_ts in timestamps_str:
+            print(f'\n The event refers to a knowledge gathering request\n{event}')
+            # Print the valid item timestamp to the console
+            print(f'\nEvent timestamp: {item_ts}')
+            # assign the channel to the channel where the reaction was added
+            channel = event.get("item", {}).get("channel")
+            knowledge_gathering_messages = get_message_replies(slack_web_client, channel, item_ts)
 
-        score_manager = ScoreManager(db_session)
+            score_manager = ScoreManager(session)
 
-        # Extract unique user IDs from the replies
-        replied_user_ids = set(message.get("user") for message in knowledge_gathering_messages if "user" in message)
+            # Extract unique user IDs from the replies
+            replied_user_ids = set(message.get("user") for message in knowledge_gathering_messages if "user" in message)
 
-        # Update luminary score for each user who replied
-        for user_id in replied_user_ids:
-            score_manager.add_or_update_score(user_id, category='luminary')
+            # Update luminary score for each user who replied
+            for user_id in replied_user_ids:
+                score_manager.add_or_update_score(user_id, category='luminary')
 
-        for knowledge_gathering_message in knowledge_gathering_messages:
-            # generate a string containing all the messages to include as context by appending them all
-            context += knowledge_gathering_message.get("text", "")
+            for knowledge_gathering_message in knowledge_gathering_messages:
+                # generate a string containing all the messages to include as context by appending them all
+                context += knowledge_gathering_message.get("text", "")
 
-    _ = ""
-    confluence_page_content = query_gpt_4t_with_context(_, context)
-    print(f"Confluence page content: {confluence_page_content}")
+        _ = ""
+        confluence_page_content = query_gpt_4t_with_context(_, context)
+        print(f"Confluence page content: {confluence_page_content}")
 
-    # Find the position where "json" occurs and add 4 to get the position after "json"
-    json_start_pos = confluence_page_content.find('json') + 4
+        # Find the position where "json" occurs and add 4 to get the position after "json"
+        json_start_pos = confluence_page_content.find('json') + 4
 
-    # Find the position of the first opening curly brace after "json"
-    brace_start_pos = confluence_page_content.find('{', json_start_pos)
+        # Find the position of the first opening curly brace after "json"
+        brace_start_pos = confluence_page_content.find('{', json_start_pos)
 
-    json_string = confluence_page_content[brace_start_pos:-3].strip()
+        json_string = confluence_page_content[brace_start_pos:-3].strip()
 
-    # cleanup json string from escape characters
-    cleaned_json_string = re.sub(r'[\x00-\x1F]+', '', json_string)
+        # cleanup json string from escape characters
+        cleaned_json_string = re.sub(r'[\x00-\x1F]+', '', json_string)
 
-    # Parse the JSON string into a Python dictionary
-    if cleaned_json_string:
-        response_dict = json.loads(cleaned_json_string)
-    else:
-        return
+        # Parse the JSON string into a Python dictionary
+        if cleaned_json_string:
+            response_dict = json.loads(cleaned_json_string)
+        else:
+            return
 
-    extracted_info = {
-        "page_title": response_dict["page_title"],
-        "page_content": response_dict["page_content"]
-    }
+        extracted_info = {
+            "page_title": response_dict["page_title"],
+            "page_content": response_dict["page_content"]
+        }
 
-    quiz_question_manager.update_with_summary_by_thread_id(thread_id=item_ts, summary=cleaned_json_string)
-    create_page_on_confluence(extracted_info["page_title"], extracted_info["page_content"])
-    # After processing the checkmark reaction, post the top users
-    channel = event.get("item", {}).get("channel")  # Assuming this is the channel ID
-    post_top_users_in_categories(slack_web_client, channel, db_session)
+        quiz_question_manager.update_with_summary_by_thread_id(thread_id=item_ts, summary=cleaned_json_string)
+        create_page_on_confluence(extracted_info["page_title"], extracted_info["page_content"])
+        # After processing the checkmark reaction, post the top users
+        channel = event.get("item", {}).get("channel")  # Assuming this is the channel ID
+        post_top_users_in_categories(slack_web_client, channel, session)
 
 
-def process_bookmark_added_event(slack_web_client, event, db_session):
+def process_bookmark_added_event(slack_web_client, event):
     print(f"Bookmark reaction event identified:\n{event}")
     channel = event.get("item", {}).get("channel")
     item_ts = event.get("item", {}).get("ts")
@@ -129,11 +131,12 @@ def process_bookmark_added_event(slack_web_client, event, db_session):
             # Join the text of all replies to form the body, skipping the first message which is the title
             body = "\n".join([message.get("text", "") for message in bookmarked_conversation_messages[1:]])
 
-            bookmarked_conversation_manager = BookmarkedConversationManager(db_session)
-            bookmarked_conversation_manager.add_bookmarked_conversation(title=title, body=body, thread_id=item_ts)
-            print(f"Bookmarked conversation added to the database: {title}")
-            create_page_on_confluence(title, body)
-            bookmarked_conversation_manager.update_posted_on_confluence(item_ts)
+            with get_db_session() as session:
+                bookmarked_conversation_manager = BookmarkedConversationManager(session)
+                bookmarked_conversation_manager.add_bookmarked_conversation(title=title, body=body, thread_id=item_ts)
+                print(f"Bookmarked conversation added to the database: {title}")
+                create_page_on_confluence(title, body)
+                bookmarked_conversation_manager.update_posted_on_confluence(item_ts)
 
         else:
             print("No messages found for the bookmarked conversation.")

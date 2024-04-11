@@ -45,7 +45,7 @@ class SlackBot:
 def load_slack_bot():
     logging.basicConfig(level=logging.INFO)
     bot_user_id = get_bot_user_id(slack_bot_user_oauth_token)
-    event_handlers = [ChannelMessageHandler(db_session=get_db_session()), ]
+    event_handlers = [ChannelMessageHandler(), ]
     bot = SlackBot(slack_bot_user_oauth_token, slack_app_level_token, bot_user_id, event_handlers)
     bot.start()
 

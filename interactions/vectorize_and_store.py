@@ -1,21 +1,24 @@
 import logging
 import time
 import json
+
+from api.request import post_request
+from database.database import get_db_session
 from database.interaction_manager import QAInteractionManager
 from open_ai.embedding.embed_manager import embed_text
 from configuration import embedding_model_id
-from configuration import api_host, api_port
+from configuration import interaction_embeds_endpoint
 import requests
 
-
-def get_qna_interactions_from_database(db_session):
-    """
-    Fetch all Q&A interactions from the database.
-
-    Returns:
-    list: A list of QAInteraction objects.
-    """
-    return QAInteractionManager(db_session).get_qa_interactions()
+#  TODO: Remove
+# def get_qna_interactions_from_database(db_session):
+#     """
+#     Fetch all Q&A interactions from the database.
+#
+#     Returns:
+#     list: A list of QAInteraction objects.
+#     """
+#     return QAInteractionManager(db_session).get_qa_interactions()
 
 
 
@@ -97,41 +100,26 @@ def store_interaction_embed_in_db(interaction_id, embed_response_json, interacti
     interaction_manager.add_embed_to_interaction(interaction_id, embed_response_json)
 
 
-def vectorize_interaction_and_store_in_db(interaction_id, db_session):
-    interaction_manager = QAInteractionManager(db_session)
-    interaction = interaction_manager.get_interaction_by_interaction_id(interaction_id)
-    if interaction:
-        formatted_interaction = format_interaction(interaction)
-        embed = vectorize_interaction(formatted_interaction, embedding_model_id)
-        store_interaction_embed_in_db(interaction_id, embed, interaction_manager)
-        logging.info(f"Interaction with ID {interaction_id} vectorized and stored in the database.")
-    else:
-        logging.error(f"No interaction found for ID {interaction_id}")
-    return None
+def vectorize_interaction_and_store_in_db(interaction_id):
+    with get_db_session() as session:
+        interaction_manager = QAInteractionManager(session)
+        interaction = interaction_manager.get_interaction_by_interaction_id(interaction_id)
+        if interaction:
+            formatted_interaction = format_interaction(interaction)
+            embed = vectorize_interaction(formatted_interaction, embedding_model_id)
+            store_interaction_embed_in_db(interaction_id, embed, interaction_manager)
+            logging.info(f"Interaction with ID {interaction_id} vectorized and stored in the database.")
+        else:
+            logging.error(f"No interaction found for ID {interaction_id}")
+        return None
 
 
-# a function that submits an API request to create_interaction_embeds
 def submit_create_interaction_embeds_request(interaction_id):
     """
     Submit an API request to create interaction embeds.
     :return: None
     """
-
-    endpoint_url = f'http://{api_host}:{api_port}/api/v1/interaction_embeds'
-    headers = {"Content-Type": "application/json"}
-    # The key here should be "interaction_id" as expected by the InteractionEmbedRequest model in the FastAPI endpoint
-    payload = {"interaction_id": interaction_id}
-
-    try:
-        response = requests.post(endpoint_url, json=payload, headers=headers)
-        response.raise_for_status()  # This will raise for HTTP errors
-        logging.info(f"Embedding creation request successful for interaction ID {interaction_id}.")
-    except requests.exceptions.HTTPError as e:
-        logging.error(
-            f"HTTP error occurred while submitting embedding creation request for interaction ID {interaction_id}: {e}")
-    except Exception as e:
-        logging.error(
-            f"An error occurred while submitting embedding creation request for interaction ID {interaction_id}: {e}")
+    post_request(interaction_embeds_endpoint, {"interaction_id": interaction_id}, data_type='Interaction embed')
 
 
 def vectorize_interactions_and_store_in_db(db, retry_limit: int = 3, wait_time: int = 5) -> None:

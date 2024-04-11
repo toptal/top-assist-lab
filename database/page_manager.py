@@ -29,21 +29,28 @@ class PageManager:
         space_key (str): The key of the Confluence space.
         pages (list): A list of page data
         """
-        # with session as session:
         for page in pages:
             page_id = page['pageId']
-            new_page = PageData(page_id=page_id,
-                                space_key=space_key,
-                                title=page['title'],
-                                author=page['author'],
-                                createdDate=self.parse_datetime(page['createdDate']),
-                                lastUpdated=self.parse_datetime(page['lastUpdated']),
-                                content=page['content'],
-                                comments=page['comments']
-                                )
-            session.add(new_page)
+            old_page = session.query(PageData).filter_by(page_id=page_id).first()
+            if old_page:
+                old_page.title = page['title']
+                old_page.lastUpdated = self.parse_datetime(page['lastUpdated'])
+                old_page.content = page['content']
+                old_page.comments = page['comments']
+                print(f"Page with ID {page_id} updated.")
+            else:
+                new_page = PageData(page_id=page_id,
+                                    space_key=space_key,
+                                    title=page['title'],
+                                    author=page['author'],
+                                    createdDate=self.parse_datetime(page['createdDate']),
+                                    lastUpdated=self.parse_datetime(page['lastUpdated']),
+                                    content=page['content'],
+                                    comments=page['comments']
+                                    )
+                session.add(new_page)
+                print(f"Page with ID {page_id} created.")
             session.commit()
-            print(f"Page with ID {page_id} written to database")
 
     def get_page_ids_missing_embeds(self, session):
         """

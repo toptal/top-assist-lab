@@ -1,7 +1,6 @@
 # from database.database import Base
 from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
-from database.mixins.crud_mixin import CRUDMixin
 from sqlalchemy import Column, Integer, String, Text, DateTime
 import json  # TODO Can we switch to sqlalchemy JSON type?
 

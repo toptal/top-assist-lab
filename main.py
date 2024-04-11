@@ -29,7 +29,7 @@ def ask_question():
             lines.append(line)
 
 
-def main_menu(db_session=get_db_session()):
+def main_menu():
     while True:
         print("\nMain Menu:")
         print("1. Load New Documentation Space")
@@ -45,31 +45,36 @@ def main_menu(db_session=get_db_session()):
             print("Loading new documentation space...")
             space_key, space_name = tui_choose_space()
             if space_key and space_name:
-                import_space(space_key, space_name, db_session)
+                with get_db_session() as db_session:
+                    import_space(space_key, space_name, db_session)
             print()
             print(f"Space '{space_name}' retrieval and indexing complete.")
 
         elif choice == "2":
             question = ask_question()
             if question:
-                answer, thread_id = answer_question_with_assistant(question, db_session)
-                print(f"\nThread ID: {thread_id}\nAnswer: {answer}")
+                with get_db_session() as db_session:
+                    answer, thread_id = answer_question_with_assistant(question, db_session)
+                    print(f"\nThread ID: {thread_id}\nAnswer: {answer}")
 
         elif choice == "3":
             print("Creating vector db for interactions")
-            vectorize_interactions_and_store_in_db(db_session)
-            VectorInteractionManager().add_to_vector(db_session)
+            with get_db_session() as db_session:
+                vectorize_interactions_and_store_in_db(db_session)
+                VectorInteractionManager().add_to_vector(db_session)
 
         elif choice == "4":
             load_manage_assistants()
 
         elif choice == "5":
             context = input("Enter the context you want to identifying knowledge gaps in\nex:(billing reminders): ")
-            identify_knowledge_gaps(context, db_session)
+            with get_db_session() as db_session:
+                identify_knowledge_gaps(context, db_session)
 
         elif choice == "6":
             print("Starting 3D visualization process...")
-            load_confluence_pages_spacial_distribution(db_session)
+            with get_db_session() as db_session:
+                load_confluence_pages_spacial_distribution(db_session)
 
         elif choice == "0":
             print("Exiting program.")

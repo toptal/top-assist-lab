@@ -74,7 +74,7 @@ def vectorize_document_and_store_in_db(page_id):
     :param page_id: The ID of the page to vectorize.
     :return: None
     """
-    with get_db_session as session:
+    with get_db_session() as session:
         page_manager = PageManager()
         page = page_manager.find_page(page_id, session)
         if not page:

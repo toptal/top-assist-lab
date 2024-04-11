@@ -1,9 +1,9 @@
 from datetime import datetime
 import logging
-import requests
 import time
 
-from configuration import api_host, api_port
+from api.request import post_request
+from configuration import embeds_endpoint
 from database.page_manager import PageManager
 from database.space_manager import SpaceManager
 from vector.create_vector_db import add_embeds_to_vector_db
@@ -16,21 +16,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 def submit_embedding_creation_request(page_id: str):
-    endpoint_url = f'http://{api_host}:{api_port}/api/v1/embeds'
-    headers = {"Content-Type": "application/json"}
-    payload = {"page_id": page_id}
-
-    try:
-        response = requests.post(endpoint_url, json=payload, headers=headers)
-        response.raise_for_status()  # This will raise for HTTP errors
-        logging.info(f"Embedding creation request successful for page ID {page_id}.")
-    except requests.exceptions.HTTPError as e:
-        logging.error(f"HTTP error occurred while submitting embedding creation request for page ID {page_id}: {e}")
-    except Exception as e:
-        logging.error(f"An error occurred while submitting embedding creation request for page ID {page_id}: {e}")
+    post_request(embeds_endpoint, {"page_id": page_id}, data_type='Embed')
 
 
-def generate_missing_page_embeddings(page_manager, session,  retry_limit: int = 3, wait_time: int = 5) -> None:
+def generate_missing_page_embeddings(page_manager, session, retry_limit: int = 3, wait_time: int = 5) -> None:
     for attempt in range(retry_limit):
         # Retrieve the IDs of pages that are still missing embeddings.
         page_ids = page_manager.get_page_ids_missing_embeds(session)
@@ -41,7 +30,6 @@ def generate_missing_page_embeddings(page_manager, session,  retry_limit: int = 
 
         logging.info(f"Attempt {attempt + 1} of {retry_limit}: Processing {len(page_ids)} pages missing embeddings.")
         for page_id in page_ids:
-            # Submit a request to generate an embedding for each page ID.
             submit_embedding_creation_request(page_id)
             # A brief delay between requests to manage load and potentially avoid rate limiting.
             time.sleep(0.2)
@@ -79,20 +67,17 @@ def tui_choose_space():
     return spaces[choice]['key'], spaces[choice]['name']
 
 
-def import_space(space_key, space_name, db_session):
-    import_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    pages = retrieve_space(space_key)
+def import_space(space_key, space_name, session):
+    page_manager = PageManager()
+    page_manager.store_pages_data(space_key, retrieve_space(space_key), session)
 
-    with db_session as session:
-        page_manager = PageManager()
-        page_manager.store_pages_data(space_key, pages, session)
-        generate_missing_page_embeddings(page_manager, session)
+    generate_missing_page_embeddings(page_manager, session)
 
-        SpaceManager().upsert_space_info(
-            space_key=space_key,
-            space_name=space_name,
-            last_import_date=import_date,
-            session=session
-        )
+    SpaceManager().upsert_space_info(
+        session,
+        space_key=space_key,
+        space_name=space_name,
+        last_import_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    )
 
-        add_embeds_to_vector_db(session, space_key)
+    add_embeds_to_vector_db(session, space_key)

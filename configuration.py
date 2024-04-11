@@ -55,6 +55,12 @@ interaction_retrieval_count = 5
 api_host = os.environ.get("NUR_API_HOST", "localhost")
 api_port = int(os.environ.get("NUR_API_PORT", "8000"))
 
+# Endpoints
+embeds_endpoint = f'http://{api_host}:{api_port}/api/v1/embeds'
+feedback_endpoint = f'http://{api_host}:{api_port}/api/v1/feedback'
+questions_endpoint = f'http://{api_host}:{api_port}/api/v1/questions'
+interaction_embeds_endpoint = f'http://{api_host}:{api_port}/api/v1/interaction_embeds'
+
 # Name of the vector collection
 pages_collection_name = "pages"
 interactions_collection_name = "interactions"

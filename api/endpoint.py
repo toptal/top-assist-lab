@@ -1,5 +1,5 @@
 # ./api/endpoint.py
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 import uvicorn
 from openai import OpenAI
 import threading
@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from vector.chroma import vectorize_document_and_store_in_db
 from configuration import api_host, api_port
 from interactions.vectorize_and_store import vectorize_interaction_and_store_in_db
-from database.database import get_db_session
 
 processor = FastAPI()
 
@@ -42,14 +41,19 @@ class InteractionEmbedRequest(BaseModel):
 
 @processor.post("/api/v1/questions")
 def create_question(question_event: QuestionEvent):
-    thread = threading.Thread(target=process_question, args=question_event)
+    thread = threading.Thread(target=process_question, args=(question_event,))
     thread.start()
     return {"message": "Question received, processing in background", "data": question_event}
 
 
 @processor.post("/api/v1/feedback")
 def create_feedback(feedback_event: FeedbackEvent):
-    thread = threading.Thread(target=process_feedback, args=feedback_event)
+    """
+    Endpoint to initiate the feedback processing in the background.
+    :param feedback_event:
+    :return:
+    """
+    thread = threading.Thread(target=process_feedback, args=(feedback_event,))
     thread.start()
     return {"message": "Feedback received, processing in background", "data": feedback_event}
 
@@ -59,24 +63,24 @@ def create_feedback(feedback_event: FeedbackEvent):
 def create_embeds(EmbedRequest: EmbedRequest):
     """
     Endpoint to initiate the embedding generation and storage process in the background.
+    :param EmbedRequest:
     """
     page_id = EmbedRequest.page_id
-    print(f"*******Received embed request for ID: {page_id}")  # Debugging line
-    thread = threading.Thread(target=vectorize_document_and_store_in_db, args=page_id)
+    thread = threading.Thread(target=vectorize_document_and_store_in_db, args=(page_id,))
     thread.start()
     return {"message": "Embedding generation initiated, processing in background", "page_id": page_id}
 
 
 @processor.post("/api/v1/interaction_embeds")
-def create_interaction_embeds(InteractionEmbedRequest: InteractionEmbedRequest, db_session=Depends(get_db_session)):
+def create_interaction_embeds(InteractionEmbedRequest: InteractionEmbedRequest):
     """
     Endpoint to initiate the embedding generation and storage process in the background.
+    :param InteractionEmbedRequest:
+    :return:
     """
     interaction_id = InteractionEmbedRequest.interaction_id
     print(f"Received interaction embed request for ID: {interaction_id}")  # Debugging line
-
-    # Use threading to process the embedding generation and storage without blocking the endpoint response
-    thread = threading.Thread(target=vectorize_interaction_and_store_in_db, args=(interaction_id, db_session))
+    thread = threading.Thread(target=vectorize_interaction_and_store_in_db, args=(interaction_id,))
     thread.start()
 
     # Make sure to return a response that matches what your client expects
