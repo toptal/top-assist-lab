@@ -93,4 +93,4 @@ def import_space(space_key, space_name, db_session):
         last_import_date=import_date
     )
 
-    add_embeds_to_vector_db(space_key)
+    add_embeds_to_vector_db(db_session, space_key)

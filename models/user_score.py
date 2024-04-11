@@ -1,9 +1,11 @@
-from database.database import Base
+# from database.database import Base
+from sqlalchemy.ext.declarative import declarative_base
+Base = declarative_base()
 from database.mixins.crud_mixin import CRUDMixin
 from sqlalchemy import Column, Integer, String
 
 
-class UserScore(Base):
+class UserScore(Base, CRUDMixin):
     """
     SQLAlchemy model for storing user scores.
     """
@@ -17,5 +19,5 @@ class UserScore(Base):
 
     def get_filter_attributes(self):
         return [
-            "id",
+            "id", "slack_user_id"
         ]

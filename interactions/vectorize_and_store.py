@@ -8,15 +8,15 @@ from configuration import api_host, api_port
 import requests
 
 
-def get_qna_interactions_from_database():
+def get_qna_interactions_from_database(db_session):
     """
     Fetch all Q&A interactions from the database.
 
     Returns:
     list: A list of QAInteraction objects.
     """
-    all_interactions = QAInteractionManager().get_qa_interactions()
-    return all_interactions
+    return QAInteractionManager(db_session).get_qa_interactions()
+
 
 
 def get_qna_interactions_without_embeds(db_session):
@@ -97,8 +97,8 @@ def store_interaction_embed_in_db(interaction_id, embed_response_json, interacti
     interaction_manager.add_embed_to_interaction(interaction_id, embed_response_json)
 
 
-def vectorize_interaction_and_store_in_db(interaction_id, db):
-    interaction_manager = QAInteractionManager(db)
+def vectorize_interaction_and_store_in_db(interaction_id, db_session):
+    interaction_manager = QAInteractionManager(db_session)
     interaction = interaction_manager.get_interaction_by_interaction_id(interaction_id)
     if interaction:
         formatted_interaction = format_interaction(interaction)

@@ -1,4 +1,6 @@
-from database.database import Base
+# from database.database import Base
+from sqlalchemy.ext.declarative import declarative_base
+Base = declarative_base()
 from database.mixins.crud_mixin import CRUDMixin
 from sqlalchemy import Column, Integer, String, DateTime
 
@@ -16,5 +18,5 @@ class SpaceInfo(Base, CRUDMixin):
 
     def get_filter_attributes(self):
         return [
-            "id",
+            "id", "space_key"
         ]

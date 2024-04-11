@@ -1,15 +1,13 @@
 # ./database/nur_database.py
 from typing import List, Optional
-from sqlalchemy.exc import SQLAlchemyError
 from models.page_data import PageData
-from database.database import Database
 from datetime import datetime, timezone
 import json
 
 
 class PageManager:
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, db_session):
+        self.db_session = db_session
 
     def parse_datetime(self, date_string):
         """
@@ -31,26 +29,27 @@ class PageManager:
         space_key (str): The key of the Confluence space.
         pages (list): A list of page data
         """
-        for page in pages:
-            page_id = page['pageId']
-            new_page = PageData(page_id=page_id,
-                                space_key=space_key,
-                                title=page['title'],
-                                author=page['author'],
-                                createdDate=self.parse_datetime(page['createdDate']),
-                                lastUpdated=self.parse_datetime(page['lastUpdated']),
-                                content=page['content'],
-                                comments=page['comments']
-                                )
-            self.db.add_object(new_page)
-            print(f"Page with ID {page_id} written to database")
+        with self.db_session as session:
+            for page in pages:
+                page_id = page['pageId']
+                PageData().create_or_update(session,
+                                            page_id=page_id,
+                                            space_key=space_key,
+                                            title=page['title'],
+                                            author=page['author'],
+                                            createdDate=self.parse_datetime(page['createdDate']),
+                                            lastUpdated=self.parse_datetime(page['lastUpdated']),
+                                            content=page['content'],
+                                            comments=page['comments']
+                                            )
+                print(f"Page with ID {page_id} written to database")
 
     def get_page_ids_missing_embeds(self):
         """
         Retrieve the page IDs of pages that are missing embeddings.
         :return: A list of page IDs.
         """
-        with self.db.get_session() as session:
+        with self.db_session as session:
             records = session.query(PageData).filter(
                 (PageData.lastUpdated > PageData.last_embedded) |
                 (PageData.last_embedded.is_(None))
@@ -65,7 +64,7 @@ class PageManager:
         :param space_key: Optional; the specific space key to filter pages by.
         :return: Tuple of page_ids (list of page IDs), all_documents (list of document strings), and embeddings (list of embeddings as strings)
         """
-        with self.db.get_session() as session:
+        with self.db_session as session:
             if space_key:
                 records = session.query(PageData).filter(PageData.space_key == space_key).all()
             else:
@@ -93,22 +92,12 @@ class PageManager:
             page_id (str): The ID of the page to update.
             embed_vector: The embed vector data to be added or updated, expected to be a list of floats.
         """
-        embed_vector_json = json.dumps(embed_vector)
-
-        try:
-            with self.db.get_session() as session:
-                page = session.query(PageData).filter_by(page_id=page_id).first()
-
-                if page:
-                    page.embed = embed_vector_json  # Store the serialized list
-                    page.last_embedded = datetime.now(timezone.utc)
-                    print(f"Embed vector and last_embedded timestamp for page ID {page_id} have been updated.")
-                    session.commit()
-                else:
-                    print(f"No page found with ID {page_id}. Consider handling this case as needed.")
-        except SQLAlchemyError as e:
-            session.rollback()
-            raise e
+        with self.db_session as session:
+            PageData().create_or_update(session,
+                                        page_id=page_id,
+                                        embed=json.dumps(embed_vector),
+                                        last_embedded=datetime.now(timezone.utc)
+                                        )
 
     def find_page(self, page_id) -> Optional[PageData]:
         """
@@ -116,9 +105,8 @@ class PageManager:
         :param page_id: The ID of the page to find.
         :return: The page data if found, or None if not found.
         """
-        with self.db.get_session() as session:
-            page_record = session.query(PageData).filter_by(page_id=page_id).first()
-            return page_record
+        with self.db_session as session:
+            return session.query(PageData).filter_by(page_id=page_id).first()
 
     def find_pages(self, page_ids) -> List[PageData]:
         """
@@ -126,9 +114,8 @@ class PageManager:
         :param page_ids: A list of page IDs to find.
         :return: A list of page data if found, or an empty list if not found.
         """
-        with self.db.get_session() as session:
-            pages = session.query(PageData).filter(PageData.page_id.in_(page_ids)).all()
-            return pages
+        with self.db_session as session:
+            return session.query(PageData).filter(PageData.page_id.in_(page_ids)).all()
 
     def format_page_for_llm(self, page: PageData) -> str:
         """

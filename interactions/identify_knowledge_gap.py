@@ -171,7 +171,7 @@ def query_assistant_with_context(context, formatted_interactions, thread_id=None
     return assistant_response, thread_id
 
 
-def process_and_store_questions(assistant_response_json, db):
+def process_and_store_questions(assistant_response_json, db_session):
     """
     Processes the JSON response from the assistant, extracts questions, stores them in the database,
     and collects the QuizQuestionDTO objects.
@@ -188,7 +188,7 @@ def process_and_store_questions(assistant_response_json, db):
         logging.error(f"Error decoding JSON: {e}")
         return []
 
-    quiz_question_manager = QuizQuestionManager(db)
+    quiz_question_manager = QuizQuestionManager(db_session)
 
     quiz_question_dtos = []
     for item in questions_data:
@@ -213,12 +213,13 @@ def strip_json(assistant_response):
     """
     try:
         # Attempt to find the start of the JSON content
-        start_index = assistant_response.index("```json") + len("```json")
-        end_index = assistant_response.index("```", start_index)
-        json_content = assistant_response[start_index:end_index].strip()
+        if assistant_response.find("```json") == 1:
+            start_index = assistant_response.index("```json") + len("```json")
+            end_index = assistant_response.index("```", start_index)
+            assistant_response = assistant_response[start_index:end_index].strip()
         # Basic validation to check if it's likely to be JSON
-        if json_content.startswith("[") and json_content.endswith("]"):
-            return json_content
+        if assistant_response.startswith("[") and assistant_response.endswith("]"):
+            return assistant_response
         else:
             logging.error("Extracted content does not appear to be valid JSON.")
             return "[]"
@@ -227,17 +228,17 @@ def strip_json(assistant_response):
         return "[]"
 
 
-def identify_knowledge_gaps(context, db):
+def identify_knowledge_gaps(context, db_session):
     query = f"no information in context: {context}"
     interaction_ids = retrieve_relevant_interaction_ids(query)
-    relevant_qa_interactions = QAInteractionManager(db).get_interactions_by_interaction_ids(interaction_ids)
+    relevant_qa_interactions = QAInteractionManager(db_session).get_interactions_by_interaction_ids(interaction_ids)
     formatted_interactions, user_ids = format_interactions(relevant_qa_interactions)
     assistant_response, thread_ids = query_assistant_with_context(context, formatted_interactions)
     questions_json = strip_json(assistant_response)
-    quiz_question_dtos = process_and_store_questions(questions_json, db)
+    quiz_question_dtos = process_and_store_questions(questions_json, db_session)
 
     # Updated to print IDs of stored questions
     print(f"Stored questions with IDs: {[q.id for q in quiz_question_dtos]}")
 
     # Updated function call to match the expected input
-    post_questions_to_slack(channel_id=knowledge_gap_discussions_channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)
+    post_questions_to_slack(db_session, channel_id=knowledge_gap_discussions_channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)

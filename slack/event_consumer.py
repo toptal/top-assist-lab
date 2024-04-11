@@ -66,7 +66,7 @@ class EventConsumer:
         message_ts = question_event.ts
         try:
             context_page_ids = retrieve_relevant_documents(question_event.text)
-            response_text, assistant_thread_id = query_assistant_with_context(question_event.text, context_page_ids, None)
+            response_text, assistant_thread_id = query_assistant_with_context(question_event.text, context_page_ids, self.db_session,None)
         except Exception as e:
             print(f"Error processing question: {e}")
             response_text = None
@@ -76,8 +76,7 @@ class EventConsumer:
             try:
                 self.add_question_and_response_to_database(question_event, response_text, assistant_thread_id=assistant_thread_id)
                 try:
-                    self.score_manager.add_or_update_score(slack_user_id=question_event.user, category='seeker',
-                                                           points=1)
+                    self.score_manager.add_or_update_score(slack_user_id=question_event.user, category='seeker')
                     print(f"Score updated for user {question_event.user}")
                 except Exception as e:
                     print(f"Error updating score for user {question_event.user}: {e}")

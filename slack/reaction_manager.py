@@ -10,8 +10,8 @@ from database.bookmarked_conversation_manager import BookmarkedConversationManag
 from slack.message_manager import get_message_replies
 
 
-def get_top_users_by_category(slack_web_client):
-    score_manager = ScoreManager()
+def get_top_users_by_category(slack_web_client, db_session):
+    score_manager = ScoreManager(db_session)
     categories = ['seeker', 'revealer', 'luminary']
     top_users_by_category = {}
 
@@ -31,7 +31,7 @@ def post_top_users_in_categories(slack_web_client, channel):
     # Assuming get_top_users_by_category is implemented elsewhere and returns a dictionary
     # where keys are categories and values are lists of top users (name and score).
 
-    top_users_by_category = get_top_users_by_category(slack_web_client)
+    top_users_by_category = get_top_users_by_category(slack_web_client, db_session)
 
     # Format the message
     message_blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": "*Top 10 Users by Category:*"}}]
@@ -76,7 +76,7 @@ def process_checkmark_added_event(slack_web_client, event, db_session):
 
         # Update luminary score for each user who replied
         for user_id in replied_user_ids:
-            score_manager.add_or_update_score(user_id, category='luminary', points=1)
+            score_manager.add_or_update_score(user_id, category='luminary')
 
         for knowledge_gathering_message in knowledge_gathering_messages:
             # generate a string containing all the messages to include as context by appending them all
@@ -112,7 +112,7 @@ def process_checkmark_added_event(slack_web_client, event, db_session):
     create_page_on_confluence(extracted_info["page_title"], extracted_info["page_content"])
     # After processing the checkmark reaction, post the top users
     channel = event.get("item", {}).get("channel")  # Assuming this is the channel ID
-    post_top_users_in_categories(slack_web_client, channel)
+    post_top_users_in_categories(slack_web_client, channel, db_session)
 
 
 def process_bookmark_added_event(slack_web_client, event, db_session):

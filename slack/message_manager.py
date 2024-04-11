@@ -7,7 +7,7 @@ from interactions.quiz_question_dto import QuizQuestionDTO
 from slack_sdk.errors import SlackApiError
 
 
-def post_questions_to_slack(channel_id, quiz_question_dtos, user_ids):
+def post_questions_to_slack(db_session, channel_id, quiz_question_dtos, user_ids):
     """
     Posts a list of QuizQuestionDTO objects to a specified Slack channel, tags all users in the first reply,
     invites them to contribute to the information gathering related to their questions, asks them to tag domain
@@ -23,8 +23,8 @@ def post_questions_to_slack(channel_id, quiz_question_dtos, user_ids):
     """
 
     client = WebClient(token=slack_bot_user_oauth_token)
-    quiz_question_manager = QuizQuestionManager()
-    score_manager = ScoreManager()
+    quiz_question_manager = QuizQuestionManager(db_session)
+    score_manager = ScoreManager(db_session)
 
     for quiz_question_dto in quiz_question_dtos:
         try:
@@ -51,7 +51,7 @@ def post_questions_to_slack(channel_id, quiz_question_dtos, user_ids):
 
             # Award points to each revealer
             for user_id in user_ids:
-                score_manager.add_or_update_score(user_id, category='revealer', points=1)
+                score_manager.add_or_update_score(user_id, category='revealer')
 
         except Exception as e:
             print(f"Exception occurred while posting message to Slack: {e}")

@@ -11,7 +11,7 @@ from database.page_manager import PageManager, PageData
 logging.basicConfig(level=logging.INFO)
 
 
-def format_pages_as_context(pages: List[PageData], max_length=30000, truncation_label=" [Content truncated due to size limit.]"):
+def format_pages_as_context(db_session, pages: List[PageData], max_length=30000, truncation_label=" [Content truncated due to size limit.]"):
     """
     Formats specified files as a context string for referencing in responses,
     ensuring the total context length does not exceed the specified maximum length.
@@ -28,7 +28,7 @@ def format_pages_as_context(pages: List[PageData], max_length=30000, truncation_
     for page in pages:
         title = page.title
         space_key = page.space_key
-        file_content = PageManager().format_page_for_llm(page)
+        file_content = PageManager(db_session).format_page_for_llm(page)
         page_data = f"\nDocument Title: {title}\nSpace Key: {space_key}\n\n{file_content}"
 
         # Truncate and stop if the total length exceeds the maximum allowed
@@ -72,7 +72,7 @@ def query_assistant_with_context(question, page_ids, db_session, thread_id=None)
 
     # Format the context
     pages = PageManager(db_session).find_pages(page_ids)
-    context = format_pages_as_context(pages)
+    context = format_pages_as_context(db_session, pages)
     print(f"\n\nContext formatted: {context}\n")
 
     # Initialize ThreadManager with or without an existing thread_id
