@@ -1,7 +1,6 @@
-from sqlalchemy.ext.declarative import declarative_base
+from database.database import Base
+from database.mixins.crud_mixin import CRUDMixin
 from sqlalchemy import Column, Integer, String
-
-Base = declarative_base()
 
 
 class UserScore(Base):
@@ -15,3 +14,8 @@ class UserScore(Base):
     seeker_score = Column(Integer, default=0)
     revealer_score = Column(Integer, default=0)
     luminary_score = Column(Integer, default=0)
+
+    def get_filter_attributes(self):
+        return [
+            "id",
+        ]

@@ -4,8 +4,8 @@ from database.database import Database
 
 
 class SpaceManager:
-    def __init__(self):
-        self.db = Database()
+    def __init__(self, db_session):
+        self.db_session = db_session
 
     def add_space_info(self, space_key, space_name, last_import_date):
         """Add a new space to the database."""

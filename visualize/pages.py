@@ -7,9 +7,9 @@ from umap import UMAP  # Ensure umap-learn is installed
 from configuration import chart_folder_path
 
 
-def import_data():
+def import_data(db_session):
     # Step 1: Retrieve all page data, including embeddings, titles, and space keys
-    page_ids, all_documents, embeddings_json = PageManager().get_all_page_data_from_db()
+    page_ids, all_documents, embeddings_json = PageManager(db_session).get_all_page_data_from_db()
     print(f"Retrieved {len(embeddings_json)} embeddings from the database.")
 
     if not embeddings_json:
@@ -75,9 +75,9 @@ def visualize_page_clusters_3d(reduced_embeddings, color_indices, hover_texts):
     print("3D Clustered visualization displayed.")
 
 
-def load_confluence_pages_spacial_distribution():
+def load_confluence_pages_spacial_distribution(db_session):
     print("Starting 3D visualization process...")
 
-    page_ids, all_documents, embeddings_json = import_data()
+    page_ids, all_documents, embeddings_json = import_data(db_session)
     reduced_embeddings, cluster_labels, hover_texts = prepare_data(all_documents, embeddings_json, n_clusters=10)
     visualize_page_clusters_3d(reduced_embeddings, cluster_labels, hover_texts)

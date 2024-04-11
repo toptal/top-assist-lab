@@ -11,9 +11,9 @@ class VectorInteractionManager:
     def __init__(self):
         self.client = chromadb.PersistentClient(path=interactions_folder_path)
 
-    def add_to_vector(self):
+    def add_to_vector(self, db_session):
         collection_name = interactions_collection_name
-        interactions = QAInteractionManager().get_interactions_with_embeds()
+        interactions = QAInteractionManager(db_session).get_interactions_with_embeds()
 
         interaction_ids = []
         interaction_embeddings = []

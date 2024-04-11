@@ -1,12 +1,11 @@
 from models.user_score import UserScore
 from slack.client import get_bot_user_id
-from database.database import Database
 from sqlalchemy.exc import SQLAlchemyError
 
 
 class ScoreManager:
-    def __init__(self):
-        self.db = Database()
+    def __init__(self, db_session):
+        self.db_session = db_session
         self.bot_user_id = get_bot_user_id()
 
     def add_or_update_score(self, slack_user_id, category, points=1):

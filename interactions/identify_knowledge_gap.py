@@ -171,7 +171,7 @@ def query_assistant_with_context(context, formatted_interactions, thread_id=None
     return assistant_response, thread_id
 
 
-def process_and_store_questions(assistant_response_json):
+def process_and_store_questions(assistant_response_json, db):
     """
     Processes the JSON response from the assistant, extracts questions, stores them in the database,
     and collects the QuizQuestionDTO objects.
@@ -188,7 +188,7 @@ def process_and_store_questions(assistant_response_json):
         logging.error(f"Error decoding JSON: {e}")
         return []
 
-    quiz_question_manager = QuizQuestionManager()
+    quiz_question_manager = QuizQuestionManager(db)
 
     quiz_question_dtos = []
     for item in questions_data:
@@ -227,17 +227,17 @@ def strip_json(assistant_response):
         return "[]"
 
 
-def identify_knowledge_gaps(context):
+def identify_knowledge_gaps(context, db):
     query = f"no information in context: {context}"
     interaction_ids = retrieve_relevant_interaction_ids(query)
-    relevant_qa_interactions = QAInteractionManager().get_interactions_by_interaction_ids(interaction_ids)
+    relevant_qa_interactions = QAInteractionManager(db).get_interactions_by_interaction_ids(interaction_ids)
     formatted_interactions, user_ids = format_interactions(relevant_qa_interactions)
     assistant_response, thread_ids = query_assistant_with_context(context, formatted_interactions)
     questions_json = strip_json(assistant_response)
-    quiz_question_dtos = process_and_store_questions(questions_json)
+    quiz_question_dtos = process_and_store_questions(questions_json, db)
 
     # Updated to print IDs of stored questions
     print(f"Stored questions with IDs: {[q.id for q in quiz_question_dtos]}")
 
     # Updated function call to match the expected input
-    quiz_questions = post_questions_to_slack(channel_id=knowledge_gap_discussions_channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)
+    post_questions_to_slack(channel_id=knowledge_gap_discussions_channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)

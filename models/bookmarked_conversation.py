@@ -1,11 +1,10 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from database.database import Base
+from database.mixins.crud_mixin import CRUDMixin
 from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, Text, DateTime
 
-Base = declarative_base()
 
-
-class BookmarkedConversation(Base):
+class BookmarkedConversation(Base, CRUDMixin):
     __tablename__ = 'bookmarked_conversations'
 
     id = Column(Integer, primary_key=True)
@@ -17,3 +16,8 @@ class BookmarkedConversation(Base):
 
     def __repr__(self):
         return f"<BookmarkedConversation(title={self.title}, thread_id={self.thread_id})>"
+
+    def get_filter_attributes(self):
+        return [
+            "id",
+        ]

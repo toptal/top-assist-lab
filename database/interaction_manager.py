@@ -2,13 +2,12 @@
 from datetime import datetime, timezone
 from models.qa_interaction import QAInteraction
 from sqlalchemy.exc import SQLAlchemyError
-from database.database import Database
 import json
 
 
 class QAInteractionManager:
-    def __init__(self):
-        self.db = Database()
+    def __init__(self, db_session):
+        self.db_session = db_session
 
     def add_question_and_answer(self, question, answer, thread_id, assistant_thread_id, channel_id, question_ts,
                                 answer_ts, slack_user_id):

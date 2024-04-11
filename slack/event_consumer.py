@@ -42,10 +42,11 @@ def get_user_name_from_id(slack_web_client, user_id):
 
 
 class EventConsumer:
-    def __init__(self):
+    def __init__(self, db_session):
+        self.db_session = db_session
         self.web_client = WebClient(token=slack_bot_user_oauth_token)
-        self.interaction_manager = QAInteractionManager()
-        self.score_manager = ScoreManager()
+        self.interaction_manager = QAInteractionManager(db_session)
+        self.score_manager = ScoreManager(db_session)
         logging.log(logging.DEBUG, f"Slack Event Consumer initiated successfully")
 
     def add_question_and_response_to_database(self, question_event, response_text, assistant_thread_id):
@@ -127,13 +128,11 @@ class EventConsumer:
             print(f"No response generated for feedback: {feedback_event.dict()}\n")
 
 
-def process_question(question_event: QuestionEvent):
+def process_question(question_event: QuestionEvent, db):
     """Directly processes a question event without using the queue."""
-    consumer = EventConsumer()
-    consumer.process_question(question_event)
+    EventConsumer(db).process_question(question_event)
 
 
-def process_feedback(feedback_event: FeedbackEvent):
+def process_feedback(feedback_event: FeedbackEvent, db):
     """Directly processes a feedback event without using the queue."""
-    consumer = EventConsumer()
-    consumer.process_feedback(feedback_event)
+    EventConsumer(db).process_feedback(feedback_event)

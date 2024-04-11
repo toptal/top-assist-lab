@@ -19,14 +19,14 @@ def get_qna_interactions_from_database():
     return all_interactions
 
 
-def get_qna_interactions_without_embeds():
+def get_qna_interactions_without_embeds(db_session):
     """
     Fetch all Q&A interactions from the database without embeds.
 
     Returns:
     list: A list of QAInteraction objects.
     """
-    all_interactions = QAInteractionManager().get_interactions_without_embeds()
+    all_interactions = QAInteractionManager(db_session).get_interactions_without_embeds()
     return all_interactions
 
 
@@ -85,23 +85,25 @@ def vectorize_interaction(formatted_interaction, embedding_model_id):
     return embed
 
 
-def store_interaction_embed_in_db(interaction_id, embed_response_json):
+def store_interaction_embed_in_db(interaction_id, embed_response_json, interaction_manager):
     """
     Store an interaction's embedding in the database.
+    :param interaction_manager: The QAInteractionManager instance.
     :param interaction_id: The ID of the interaction to store.
     :param embed_response_json: The JSON string response containing the embedding.
     :return: None
     """
     # Directly use the JSON string of the embedding vector as received from embed_text
-    QAInteractionManager().add_embed_to_interaction(interaction_id, embed_response_json)
+    interaction_manager.add_embed_to_interaction(interaction_id, embed_response_json)
 
 
-def vectorize_interaction_and_store_in_db(interaction_id):
-    interaction = QAInteractionManager().get_interaction_by_interaction_id(interaction_id)
+def vectorize_interaction_and_store_in_db(interaction_id, db):
+    interaction_manager = QAInteractionManager(db)
+    interaction = interaction_manager.get_interaction_by_interaction_id(interaction_id)
     if interaction:
         formatted_interaction = format_interaction(interaction)
         embed = vectorize_interaction(formatted_interaction, embedding_model_id)
-        store_interaction_embed_in_db(interaction_id, embed)
+        store_interaction_embed_in_db(interaction_id, embed, interaction_manager)
         logging.info(f"Interaction with ID {interaction_id} vectorized and stored in the database.")
     else:
         logging.error(f"No interaction found for ID {interaction_id}")
@@ -132,14 +134,14 @@ def submit_create_interaction_embeds_request(interaction_id):
             f"An error occurred while submitting embedding creation request for interaction ID {interaction_id}: {e}")
 
 
-def vectorize_interactions_and_store_in_db(retry_limit: int = 3, wait_time: int = 5) -> None:
+def vectorize_interactions_and_store_in_db(db, retry_limit: int = 3, wait_time: int = 5) -> None:
     """
     Vectorize all interactions without embeds and store them in the database,
     with retries for failed attempts.
     """
     for attempt in range(retry_limit):
         # Retrieve interactions that are still missing embeddings.
-        interactions = get_qna_interactions_without_embeds()
+        interactions = get_qna_interactions_without_embeds(db)
 
         # If there are no interactions missing embeddings, exit the loop and end the process.
         if not interactions:
@@ -161,7 +163,7 @@ def vectorize_interactions_and_store_in_db(retry_limit: int = 3, wait_time: int 
         time.sleep(wait_time)
 
         # After waiting, retrieve the list of interactions still missing embeddings to see if the list has decreased.
-        interactions = get_qna_interactions_without_embeds()
+        interactions = get_qna_interactions_without_embeds(db)
         if not interactions:
             print("All interactions now have embeddings. Process complete.")
             break  # Break out of the loop if there are no more interactions missing embeddings.

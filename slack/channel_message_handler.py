@@ -15,8 +15,9 @@ from .reaction_manager import process_checkmark_added_event, process_bookmark_ad
 class ChannelMessageHandler(SlackEventHandler):
     """Handles incoming messages from the channel and publishes questions and feedback to the persist queue"""
 
-    def __init__(self):
-        self.interaction_manager = QAInteractionManager()
+    def __init__(self, db_session):
+        self.db_session = db_session
+        self.interaction_manager = QAInteractionManager(self.db_session)
         self.processed_messages = set()
         self.questions = {}
         self.load_processed_data()
@@ -81,9 +82,9 @@ class ChannelMessageHandler(SlackEventHandler):
         if event.get("type") == "reaction_added":
             # check if the reaction': is 'white_check_mark'
             if event.get("reaction") == "white_check_mark":
-                process_checkmark_added_event(slack_web_client=web_client, event=event)
+                process_checkmark_added_event(slack_web_client=web_client, event=event, db_session=self.db_session)
             elif event.get("reaction") == "bookmark":
-                process_bookmark_added_event(slack_web_client=web_client, event=event)
+                process_bookmark_added_event(slack_web_client=web_client, event=event, db_session=self.db_session)
 
         # identify if the bot is trying to gather knowledge
         if user_id == bot_user_id and not thread_ts and "?" in text and "Question:" in text:

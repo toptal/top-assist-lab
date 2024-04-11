@@ -42,7 +42,7 @@ def format_pages_as_context(pages: List[PageData], max_length=30000, truncation_
     return context
 
 
-def query_assistant_with_context(question, page_ids, thread_id=None):
+def query_assistant_with_context(question, page_ids, db_session, thread_id=None):
     """
     Queries the assistant with a specific question, after setting up the necessary context by adding relevant files.
 
@@ -71,7 +71,7 @@ def query_assistant_with_context(question, page_ids, thread_id=None):
     print(f"IDs of pages to load in context : {page_ids}\n")
 
     # Format the context
-    pages = PageManager().find_pages(page_ids)
+    pages = PageManager(db_session).find_pages(page_ids)
     context = format_pages_as_context(pages)
     print(f"\n\nContext formatted: {context}\n")
 

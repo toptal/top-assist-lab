@@ -1,10 +1,9 @@
-from sqlalchemy.ext.declarative import declarative_base
+from database.database import Base
+from database.mixins.crud_mixin import CRUDMixin
 from sqlalchemy import Column, Integer, String, Text, DateTime
 
-Base = declarative_base()
 
-
-class QuizQuestion(Base):
+class QuizQuestion(Base, CRUDMixin):
     __tablename__ = 'quiz_questions'
 
     id = Column(Integer, primary_key=True)
@@ -14,3 +13,7 @@ class QuizQuestion(Base):
     posted_on_slack = Column(DateTime)
     posted_on_confluence = Column(DateTime, nullable=True)
 
+    def get_filter_attributes(self):
+        return [
+            "id",
+        ]

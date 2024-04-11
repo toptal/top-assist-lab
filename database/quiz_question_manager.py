@@ -6,8 +6,8 @@ from database.database import Database
 
 
 class QuizQuestionManager:
-    def __init__(self):
-        self.db = Database()
+    def __init__(self, db_session):
+        self.db_session = db_session
 
     def add_quiz_question(self, question_text):
         try:

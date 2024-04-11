@@ -1,11 +1,10 @@
-from sqlalchemy.ext.declarative import declarative_base
+from database.database import Base
+from database.mixins.crud_mixin import CRUDMixin
 from sqlalchemy import Column, Integer, String, Text, DateTime
-import json
-
-Base = declarative_base()
+import json  # TODO Can we switch to sqlalchemy JSON type?
 
 
-class QAInteraction(Base):
+class QAInteraction(Base, CRUDMixin):
     __tablename__ = 'qa_interactions'
 
     id = Column(Integer, primary_key=True)
@@ -20,3 +19,8 @@ class QAInteraction(Base):
     comments = Column(Text, default=json.dumps([]))
     last_embedded = Column(DateTime)
     embed = Column(Text, default=json.dumps([]))
+
+    def get_filter_attributes(self):
+        return [
+            "id",
+        ]

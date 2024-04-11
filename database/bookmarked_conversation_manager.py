@@ -1,12 +1,12 @@
 from sqlalchemy.exc import SQLAlchemyError
 from models.bookmarked_conversation import BookmarkedConversation
 from datetime import datetime, timezone
-from database.database import Database
+from database.database import Database  # TODO remove
 
 
 class BookmarkedConversationManager:
-    def __init__(self):
-        self.db = Database()
+    def __init__(self, db_session):
+        self.db_session = db_session
 
     def add_bookmarked_conversation(self, title, body, thread_id):
         new_conversation = BookmarkedConversation(title=title, body=body, thread_id=thread_id)

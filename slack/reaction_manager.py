@@ -50,10 +50,10 @@ def post_top_users_in_categories(slack_web_client, channel):
         print(f"Failed to post top users message: {e.response['error']}")
 
 
-def process_checkmark_added_event(slack_web_client, event):
+def process_checkmark_added_event(slack_web_client, event, db_session):
     print(f"Reaction event identified:\n{event}")
 
-    quiz_question_manager = QuizQuestionManager()
+    quiz_question_manager = QuizQuestionManager(db_session)
     timestamps = quiz_question_manager.get_unposted_questions_timestamps()
     # Convert timestamps to strings, as Slack timestamps are string values
     timestamps_str = [str(ts) for ts in timestamps]
@@ -69,7 +69,7 @@ def process_checkmark_added_event(slack_web_client, event):
         channel = event.get("item", {}).get("channel")
         knowledge_gathering_messages = get_message_replies(slack_web_client, channel, item_ts)
 
-        score_manager = ScoreManager()
+        score_manager = ScoreManager(db_session)
 
         # Extract unique user IDs from the replies
         replied_user_ids = set(message.get("user") for message in knowledge_gathering_messages if "user" in message)
@@ -103,7 +103,6 @@ def process_checkmark_added_event(slack_web_client, event):
     else:
         return
 
-    # Extract the page title and content into a new dictionary
     extracted_info = {
         "page_title": response_dict["page_title"],
         "page_content": response_dict["page_content"]
@@ -116,15 +115,12 @@ def process_checkmark_added_event(slack_web_client, event):
     post_top_users_in_categories(slack_web_client, channel)
 
 
-def process_bookmark_added_event(slack_web_client, event):
+def process_bookmark_added_event(slack_web_client, event, db_session):
     print(f"Bookmark reaction event identified:\n{event}")
-
-    # Extract the channel and timestamp (ts) of the message that received the bookmark reaction
     channel = event.get("item", {}).get("channel")
     item_ts = event.get("item", {}).get("ts")
 
     try:
-        # Use the get_message_replies function to fetch the conversation
         bookmarked_conversation_messages = get_message_replies(slack_web_client, channel, item_ts)
 
         if bookmarked_conversation_messages:
@@ -133,14 +129,9 @@ def process_bookmark_added_event(slack_web_client, event):
             # Join the text of all replies to form the body, skipping the first message which is the title
             body = "\n".join([message.get("text", "") for message in bookmarked_conversation_messages[1:]])
 
-            # Initialize the BookmarkedConversationManager
-            bookmarked_conversation_manager = BookmarkedConversationManager()
-
-            # Add the bookmarked conversation to the database
+            bookmarked_conversation_manager = BookmarkedConversationManager(db_session)
             bookmarked_conversation_manager.add_bookmarked_conversation(title=title, body=body, thread_id=item_ts)
             print(f"Bookmarked conversation added to the database: {title}")
-
-            # Add conversation on confluence
             create_page_on_confluence(title, body)
             bookmarked_conversation_manager.update_posted_on_confluence(item_ts)
 

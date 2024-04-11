@@ -8,8 +8,8 @@ import json
 
 
 class PageManager:
-    def __init__(self):
-        self.db = Database()
+    def __init__(self, session):
+        self.session = session
 
     def parse_datetime(self, date_string):
         """

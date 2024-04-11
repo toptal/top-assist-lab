@@ -1,10 +1,9 @@
-from sqlalchemy.ext.declarative import declarative_base
+from database.database import Base
+from database.mixins.crud_mixin import CRUDMixin
 from sqlalchemy import Column, Integer, String, DateTime
 
-Base = declarative_base()
 
-
-class SpaceInfo(Base):
+class SpaceInfo(Base, CRUDMixin):
     """
     SQLAlchemy model for storing Confluence space data.
     """
@@ -14,3 +13,8 @@ class SpaceInfo(Base):
     space_key = Column(String, nullable=False)
     space_name = Column(String, nullable=False)
     last_import_date = Column(DateTime, nullable=False)
+
+    def get_filter_attributes(self):
+        return [
+            "id",
+        ]

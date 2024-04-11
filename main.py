@@ -7,11 +7,12 @@ from open_ai.assistants.query_assistant_from_documents import query_assistant_wi
 from vector.chroma import retrieve_relevant_documents
 from vector.create_interaction_db import VectorInteractionManager
 from visualize.pages import load_confluence_pages_spacial_distribution
+from database.database import get_db_session
 
 
-def answer_question_with_assistant(question):
+def answer_question_with_assistant(question, db_session):
     relevant_document_ids = retrieve_relevant_documents(question)
-    response, thread_id = query_assistant_with_context(question, relevant_document_ids)
+    response, thread_id = query_assistant_with_context(question, relevant_document_ids, db_session)
     return response, thread_id
 
 
@@ -28,7 +29,7 @@ def ask_question():
             lines.append(line)
 
 
-def main_menu():
+def main_menu(db_session=get_db_session()):
     while True:
         print("\nMain Menu:")
         print("1. Load New Documentation Space")
@@ -44,31 +45,31 @@ def main_menu():
             print("Loading new documentation space...")
             space_key, space_name = tui_choose_space()
             if space_key and space_name:
-                import_space(space_key, space_name)
+                import_space(space_key, space_name, db_session)
             print()
             print(f"Space '{space_name}' retrieval and indexing complete.")
 
         elif choice == "2":
             question = ask_question()
             if question:
-                answer, thread_id = answer_question_with_assistant(question)
+                answer, thread_id = answer_question_with_assistant(question, db_session)
                 print(f"\nThread ID: {thread_id}\nAnswer: {answer}")
 
         elif choice == "3":
             print("Creating vector db for interactions")
-            vectorize_interactions_and_store_in_db()
-            VectorInteractionManager().add_to_vector()
+            vectorize_interactions_and_store_in_db(db_session)
+            VectorInteractionManager().add_to_vector(db_session)
 
         elif choice == "4":
             load_manage_assistants()
 
         elif choice == "5":
             context = input("Enter the context you want to identifying knowledge gaps in\nex:(billing reminders): ")
-            identify_knowledge_gaps(context)
+            identify_knowledge_gaps(context, db_session)
 
         elif choice == "6":
             print("Starting 3D visualization process...")
-            load_confluence_pages_spacial_distribution()
+            load_confluence_pages_spacial_distribution(db_session)
 
         elif choice == "0":
             print("Exiting program.")
