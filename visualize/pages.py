@@ -1,5 +1,5 @@
 # Import necessary libraries
-from database.page_manager import get_all_page_data_from_db
+from database.page_manager import PageManager
 import numpy as np
 import json
 import plotly.graph_objects as go  # Import Plotly Graph Objects for 3D plotting
@@ -9,7 +9,7 @@ from configuration import chart_folder_path
 
 def import_data():
     # Step 1: Retrieve all page data, including embeddings, titles, and space keys
-    page_ids, all_documents, embeddings_json = get_all_page_data_from_db()
+    page_ids, all_documents, embeddings_json = PageManager().get_all_page_data_from_db()
     print(f"Retrieved {len(embeddings_json)} embeddings from the database.")
 
     if not embeddings_json:

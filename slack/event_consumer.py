@@ -11,7 +11,7 @@ from credentials import slack_bot_user_oauth_token
 from vector.chroma import retrieve_relevant_documents
 from open_ai.assistants.query_assistant_from_documents import query_assistant_with_context
 from database.interaction_manager import QAInteractionManager
-from gamification.score_manager import ScoreManager
+from database.score_manager import ScoreManager
 from slack_sdk.errors import SlackApiError
 
 
@@ -63,13 +63,13 @@ class EventConsumer:
     def process_question(self, question_event: QuestionEvent):
         channel_id = question_event.channel
         message_ts = question_event.ts
-        user_id = question_event.user
         try:
             context_page_ids = retrieve_relevant_documents(question_event.text)
             response_text, assistant_thread_id = query_assistant_with_context(question_event.text, context_page_ids, None)
         except Exception as e:
             print(f"Error processing question: {e}")
             response_text = None
+
         if response_text:
             print(f"Response from assistant: {response_text}\n")
             try:

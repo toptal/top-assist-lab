@@ -6,7 +6,7 @@ from open_ai.assistants.assistant_manager import AssistantManager
 from configuration import qa_assistant_id
 import logging
 
-from database.page_manager import PageData, find_pages, format_page_for_llm
+from database.page_manager import PageManager, PageData
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,7 +28,7 @@ def format_pages_as_context(pages: List[PageData], max_length=30000, truncation_
     for page in pages:
         title = page.title
         space_key = page.space_key
-        file_content = format_page_for_llm(page)
+        file_content = PageManager().format_page_for_llm(page)
         page_data = f"\nDocument Title: {title}\nSpace Key: {space_key}\n\n{file_content}"
 
         # Truncate and stop if the total length exceeds the maximum allowed
@@ -71,7 +71,7 @@ def query_assistant_with_context(question, page_ids, thread_id=None):
     print(f"IDs of pages to load in context : {page_ids}\n")
 
     # Format the context
-    pages = find_pages(page_ids)
+    pages = PageManager().find_pages(page_ids)
     context = format_pages_as_context(pages)
     print(f"\n\nContext formatted: {context}\n")
 

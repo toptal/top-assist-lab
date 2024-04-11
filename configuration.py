@@ -22,6 +22,7 @@ logging.log(logging.DEBUG, f"Project path: {project_path}")
 
 chart_folder_path = os.path.join(project_path, "content", "charts")
 sql_file_path = os.path.join(project_path, "content", "database", "confluence_pages_sql.db")
+db_url = 'sqlite:///' + sql_file_path
 vector_folder_path = os.path.join(project_path, "content", "vectors", "confluence_pages")
 interactions_folder_path = os.path.join(project_path, "content", "vectors", "confluence_interactions")
 

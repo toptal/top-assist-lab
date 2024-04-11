@@ -15,12 +15,7 @@ def get_qna_interactions_from_database():
     Returns:
     list: A list of QAInteraction objects.
     """
-
-    # Initialize QAInteractionManager with the session
-    qa_manager = QAInteractionManager()
-
-    # Fetch all Q&A interactions from the database
-    all_interactions = qa_manager.get_qa_interactions()
+    all_interactions = QAInteractionManager().get_qa_interactions()
     return all_interactions
 
 
@@ -31,11 +26,7 @@ def get_qna_interactions_without_embeds():
     Returns:
     list: A list of QAInteraction objects.
     """
-    # Initialize QAInteractionManager with the session
-    qa_manager = QAInteractionManager()
-
-    # Fetch all Q&A interactions from the database
-    all_interactions = qa_manager.get_interactions_without_embeds()
+    all_interactions = QAInteractionManager().get_interactions_without_embeds()
     return all_interactions
 
 
@@ -101,14 +92,12 @@ def store_interaction_embed_in_db(interaction_id, embed_response_json):
     :param embed_response_json: The JSON string response containing the embedding.
     :return: None
     """
-    interaction_manager = QAInteractionManager()
     # Directly use the JSON string of the embedding vector as received from embed_text
-    interaction_manager.add_embed_to_interaction(interaction_id, embed_response_json)
+    QAInteractionManager().add_embed_to_interaction(interaction_id, embed_response_json)
 
 
 def vectorize_interaction_and_store_in_db(interaction_id):
-    interaction_manager = QAInteractionManager()
-    interaction = interaction_manager.get_interaction_by_interaction_id(interaction_id)  # Assuming this method exists and correctly fetches the interaction
+    interaction = QAInteractionManager().get_interaction_by_interaction_id(interaction_id)
     if interaction:
         formatted_interaction = format_interaction(interaction)
         embed = vectorize_interaction(formatted_interaction, embedding_model_id)
@@ -162,11 +151,11 @@ def vectorize_interactions_and_store_in_db(retry_limit: int = 3, wait_time: int 
         for interaction in interactions:
             try:
                 # Attempt to vectorize and store each interaction.
-                submit_create_interaction_embeds_request(str(interaction.interaction_id))
+                submit_create_interaction_embeds_request(str(interaction.id))
                 # A brief delay between processing to manage load.
                 time.sleep(0.5)
             except Exception as e:
-                logging.error(f"An error occurred while vectorizing interaction with ID {interaction.interaction_id}: {e}")
+                logging.error(f"An error occurred while vectorizing interaction with ID {interaction.id}: {e}")
 
         print(f"Waiting for {wait_time} seconds for embeddings to be processed...")
         time.sleep(wait_time)

@@ -1,11 +1,13 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Text, DateTime
 from datetime import datetime, timezone
 
 Base = declarative_base()
 
+
 class BookmarkedConversation(Base):
     __tablename__ = 'bookmarked_conversations'
+
     id = Column(Integer, primary_key=True)
     title = Column(Text)
     body = Column(Text)

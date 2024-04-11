@@ -4,7 +4,7 @@ import chromadb
 import logging
 from typing import List
 from open_ai.embedding.embed_manager import embed_text
-from database.page_manager import add_or_update_embed_vector, find_page, format_page_for_llm
+from database.page_manager import PageManager
 
 
 def generate_document_embedding(page_id, page_content, model=embedding_model_id):
@@ -73,17 +73,17 @@ def vectorize_document_and_store_in_db(page_id):
     :param page_id: The ID of the page to vectorize.
     :return: None
     """
-    page = find_page(page_id)
+    page = PageManager().find_page(page_id)
     if not page:
         logging.error(f"Page content for page ID {page_id} could not be retrieved.")
         return
 
-    page_content = format_page_for_llm(page)
+    page_content = PageManager().format_page_for_llm(page)
     embedding, error_message = generate_document_embedding(page_id, page_content)
     if embedding:
         if len(embedding) > 0:
             # Store the embedding in the database
-            add_or_update_embed_vector(page_id, embedding)
+            PageManager().add_or_update_embed_vector(page_id, embedding)
             logging.info(f"Embedding for page ID {page_id} stored in the database.")
         else:
             logging.error(f"Embedding for page ID {page_id} is empty.")
