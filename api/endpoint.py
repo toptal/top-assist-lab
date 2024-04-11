@@ -41,28 +41,28 @@ class InteractionEmbedRequest(BaseModel):
 
 
 @processor.post("/api/v1/questions")
-def create_question(question_event: QuestionEvent, db_session=Depends(get_db_session)):
-    thread = threading.Thread(target=process_question, args=(question_event, db_session))
+def create_question(question_event: QuestionEvent):
+    thread = threading.Thread(target=process_question, args=question_event)
     thread.start()
     return {"message": "Question received, processing in background", "data": question_event}
 
 
 @processor.post("/api/v1/feedback")
-def create_feedback(feedback_event: FeedbackEvent, db_session=Depends(get_db_session)):
-    thread = threading.Thread(target=process_feedback,
-                              args=(feedback_event, db_session))
+def create_feedback(feedback_event: FeedbackEvent):
+    thread = threading.Thread(target=process_feedback, args=feedback_event)
     thread.start()
     return {"message": "Feedback received, processing in background", "data": feedback_event}
 
 
 # refactor: should be changed to page_embed
 @processor.post("/api/v1/embeds")
-def create_embeds(EmbedRequest: EmbedRequest, db_session=Depends(get_db_session)):
+def create_embeds(EmbedRequest: EmbedRequest):
     """
     Endpoint to initiate the embedding generation and storage process in the background.
     """
     page_id = EmbedRequest.page_id
-    thread = threading.Thread(target=vectorize_document_and_store_in_db, args=(page_id, db_session))
+    print(f"*******Received embed request for ID: {page_id}")  # Debugging line
+    thread = threading.Thread(target=vectorize_document_and_store_in_db, args=page_id)
     thread.start()
     return {"message": "Embedding generation initiated, processing in background", "page_id": page_id}
 

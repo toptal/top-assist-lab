@@ -71,7 +71,7 @@ def query_assistant_with_context(question, page_ids, db_session, thread_id=None)
     print(f"IDs of pages to load in context : {page_ids}\n")
 
     # Format the context
-    pages = PageManager(db_session).find_pages(page_ids)
+    pages = PageManager().find_pages(page_ids, db_session)
     context = format_pages_as_context(db_session, pages)
     print(f"\n\nContext formatted: {context}\n")
 

@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from configuration import db_url
 from models.bookmarked_conversation import BookmarkedConversation
 from models.page_data import PageData
@@ -8,8 +8,7 @@ from models.qa_interaction import QAInteraction
 from models.quiz_question import QuizQuestion
 from models.space_info import SpaceInfo
 from models.user_score import UserScore
-
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://user:password@localhost/main_db"
+from contextlib import contextmanager
 
 engine = create_engine(db_url)
 
@@ -22,13 +21,17 @@ for model in [QAInteraction, SpaceInfo, PageData, BookmarkedConversation, QuizQu
     model.metadata.create_all(engine)
 
 
-def get_db_session() -> Session:
+@contextmanager
+def get_db_session():
     session = SessionLocal()
     try:
-        return session
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
     finally:
         session.close()
-
 
 #
 # from sqlalchemy import create_engine

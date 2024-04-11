@@ -30,10 +30,10 @@ def submit_embedding_creation_request(page_id: str):
         logging.error(f"An error occurred while submitting embedding creation request for page ID {page_id}: {e}")
 
 
-def generate_missing_page_embeddings(page_manager, retry_limit: int = 3, wait_time: int = 5) -> None:
+def generate_missing_page_embeddings(page_manager, session,  retry_limit: int = 3, wait_time: int = 5) -> None:
     for attempt in range(retry_limit):
         # Retrieve the IDs of pages that are still missing embeddings.
-        page_ids = page_manager.get_page_ids_missing_embeds()
+        page_ids = page_manager.get_page_ids_missing_embeds(session)
         # If there are no pages missing embeddings, exit the loop and end the process.
         if not page_ids:
             logging.info("All pages have embeddings. Process complete.")
@@ -51,7 +51,7 @@ def generate_missing_page_embeddings(page_manager, retry_limit: int = 3, wait_ti
 
         # After waiting, retrieve the list of pages still missing embeddings to see if the list has decreased.
         # This retrieval is crucial to ensure that the loop only continues if there are still pages that need processing.
-        if page_ids := page_manager.get_page_ids_missing_embeds():
+        if page_ids := page_manager.get_page_ids_missing_embeds(session):
             logging.info(f"After attempt {attempt + 1}, {len(page_ids)} pages are still missing embeds.")
         else:
             logging.info("All pages now have embeddings. Process complete.")
@@ -83,14 +83,16 @@ def import_space(space_key, space_name, db_session):
     import_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     pages = retrieve_space(space_key)
 
-    page_manager = PageManager(db_session)
-    page_manager.store_pages_data(space_key, pages)
-    generate_missing_page_embeddings(page_manager)
+    with db_session as session:
+        page_manager = PageManager()
+        page_manager.store_pages_data(space_key, pages, session)
+        generate_missing_page_embeddings(page_manager, session)
 
-    SpaceManager(db_session).upsert_space_info(
-        space_key=space_key,
-        space_name=space_name,
-        last_import_date=import_date
-    )
+        SpaceManager().upsert_space_info(
+            space_key=space_key,
+            space_name=space_name,
+            last_import_date=import_date,
+            session=session
+        )
 
-    add_embeds_to_vector_db(db_session, space_key)
+        add_embeds_to_vector_db(session, space_key)

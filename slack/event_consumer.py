@@ -12,6 +12,7 @@ from vector.chroma import retrieve_relevant_documents
 from open_ai.assistants.query_assistant_from_documents import query_assistant_with_context
 from database.interaction_manager import QAInteractionManager
 from database.score_manager import ScoreManager
+from database.database import get_db_session
 from slack_sdk.errors import SlackApiError
 
 
@@ -42,11 +43,10 @@ def get_user_name_from_id(slack_web_client, user_id):
 
 
 class EventConsumer:
-    def __init__(self, db_session):
-        self.db_session = db_session
+    def __init__(self, session):
+        self.session = session
         self.web_client = WebClient(token=slack_bot_user_oauth_token)
-        self.interaction_manager = QAInteractionManager(db_session)
-        self.score_manager = ScoreManager(db_session)
+        self.interaction_manager = QAInteractionManager(session)
         logging.log(logging.DEBUG, f"Slack Event Consumer initiated successfully")
 
     def add_question_and_response_to_database(self, question_event, response_text, assistant_thread_id):
@@ -61,12 +61,15 @@ class EventConsumer:
 
         print(f"\n\nQuestion and answer stored in the database: question: {question_event.dict()},\nAnswer: {response_text},\nAssistant_id {assistant_thread_id}\n\n")
 
-    def process_question(self, question_event: QuestionEvent):
+    def process_question(self, question_event: QuestionEvent):  # TODO: Refactor this method
         channel_id = question_event.channel
         message_ts = question_event.ts
         try:
             context_page_ids = retrieve_relevant_documents(question_event.text)
-            response_text, assistant_thread_id = query_assistant_with_context(question_event.text, context_page_ids, self.db_session,None)
+            response_text, assistant_thread_id = query_assistant_with_context(question_event.text,
+                                                                              context_page_ids,
+                                                                              self.session,
+                                                                              None)
         except Exception as e:
             print(f"Error processing question: {e}")
             response_text = None
@@ -76,7 +79,7 @@ class EventConsumer:
             try:
                 self.add_question_and_response_to_database(question_event, response_text, assistant_thread_id=assistant_thread_id)
                 try:
-                    self.score_manager.add_or_update_score(slack_user_id=question_event.user, category='seeker')
+                    ScoreManager(self.session).add_or_update_score(slack_user_id=question_event.user, category='seeker')
                     print(f"Score updated for user {question_event.user}")
                 except Exception as e:
                     print(f"Error updating score for user {question_event.user}: {e}")
@@ -91,7 +94,7 @@ class EventConsumer:
             extended_context_query = f"Follow up: {feedback_text}, Initial question: {existing_interaction.question_text}, Initial answer: {existing_interaction.answer_text}"
         return extended_context_query
 
-    def process_feedback(self, feedback_event: FeedbackEvent):
+    def process_feedback(self, feedback_event: FeedbackEvent):  # TODO: Refactor this method
         channel_id = feedback_event.channel
         message_ts = feedback_event.ts
         thread_ts = feedback_event.thread_ts
@@ -127,11 +130,13 @@ class EventConsumer:
             print(f"No response generated for feedback: {feedback_event.dict()}\n")
 
 
-def process_question(question_event: QuestionEvent, db):
+def process_question(question_event: QuestionEvent):
     """Directly processes a question event without using the queue."""
-    EventConsumer(db).process_question(question_event)
+    with get_db_session() as session:
+        EventConsumer(session).process_question(question_event)
 
 
-def process_feedback(feedback_event: FeedbackEvent, db):
+def process_feedback(feedback_event: FeedbackEvent):
     """Directly processes a feedback event without using the queue."""
-    EventConsumer(db).process_feedback(feedback_event)
+    with get_db_session() as session:
+        EventConsumer(session).process_feedback(feedback_event)

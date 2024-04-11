@@ -7,7 +7,7 @@ import json  # TODO Can we switch to sqlalchemy JSON type?
 
 
 
-class PageData(Base, CRUDMixin):
+class PageData(Base):
     """
     SQLAlchemy model for storing Confluence page data.
     """
@@ -25,7 +25,3 @@ class PageData(Base, CRUDMixin):
     last_embedded = Column(DateTime)
     embed = Column(Text, default=json.dumps([]))
 
-    def get_filter_attributes(self):
-        return [
-            "page_id"
-        ]

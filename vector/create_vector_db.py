@@ -18,7 +18,7 @@ def add_to_vector(collection_name, db_session, space_key=None):
         space_key (str): The key of the space to retrieve page data from. If None, retrieves data from all spaces.
     """
     # Retrieve all documents, their corresponding IDs, and embeddings
-    page_ids, _, embeddings = PageManager(db_session).get_all_page_data_from_db(space_key=space_key)
+    page_ids, _, embeddings = PageManager().get_all_page_data_from_db(space_key=space_key)
 
     # Deserialize the embeddings and filter out None values
     valid_embeddings = []

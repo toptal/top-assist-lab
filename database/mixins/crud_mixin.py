@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
+from contextlib import contextmanager
 
 class CRUDMixin:
     def get_or_create(self, db_session: Session):

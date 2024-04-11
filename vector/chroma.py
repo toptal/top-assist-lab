@@ -5,6 +5,7 @@ import logging
 from typing import List
 from open_ai.embedding.embed_manager import embed_text
 from database.page_manager import PageManager
+from database.database import get_db_session
 
 
 def generate_document_embedding(page_id, page_content, model=embedding_model_id):
@@ -67,27 +68,27 @@ def retrieve_relevant_documents(question: str) -> List[str]:
     return document_ids
 
 
-def vectorize_document_and_store_in_db(page_id, db_session):
+def vectorize_document_and_store_in_db(page_id):
     """
     Vectorize a document and store it in the database.
-    :param db_session: SQLAlchemy database session.
     :param page_id: The ID of the page to vectorize.
     :return: None
     """
-    page_manager = PageManager(db_session)
-    page = page_manager.find_page(page_id)
-    if not page:
-        logging.error(f"Page content for page ID {page_id} could not be retrieved.")
-        return
+    with get_db_session as session:
+        page_manager = PageManager()
+        page = page_manager.find_page(page_id, session)
+        if not page:
+            logging.error(f"Page content for page ID {page_id} could not be retrieved.")
+            return
 
-    page_content = page_manager.format_page_for_llm(page)
-    embedding, error_message = generate_document_embedding(page_id, page_content)
-    if embedding:
-        if len(embedding) > 0:
-            # Store the embedding in the database
-            page_manager.add_or_update_embed_vector(page_id, embedding)
-            logging.info(f"Embedding for page ID {page_id} stored in the database.")
+        page_content = page_manager.format_page_for_llm(page)
+        embedding, error_message = generate_document_embedding(page_id, page_content)
+        if embedding:
+            if len(embedding) > 0:
+                # Store the embedding in the database
+                page_manager.add_or_update_embed_vector(page_id, embedding, session)
+                logging.info(f"Embedding for page ID {page_id} stored in the database.")
+            else:
+                logging.error(f"Embedding for page ID {page_id} is empty.")
         else:
-            logging.error(f"Embedding for page ID {page_id} is empty.")
-    else:
-        logging.error(f"Embedding for page ID {page_id} could not be generated. {error_message}")
+            logging.error(f"Embedding for page ID {page_id} could not be generated. {error_message}")
