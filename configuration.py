@@ -23,8 +23,13 @@ logging.log(logging.DEBUG, f"Project path: {project_path}")
 chart_folder_path = os.path.join(project_path, "content", "charts")
 sql_file_path = os.path.join(project_path, "content", "database", "confluence_pages_sql.db")
 db_url = 'sqlite:///' + sql_file_path
-vector_folder_path = os.path.join(project_path, "content", "vectors", "confluence_pages")
-interactions_folder_path = os.path.join(project_path, "content", "vectors", "confluence_interactions")
+
+# Chroma vector database configuration
+chroma_host = os.environ.get("CHROMA_HOST")
+chroma_port = int(os.environ.get("CHROMA_PORT"))
+chroma_database = os.environ.get("CHROMA_DATABASE")
+vector_collection_pages = "pages"
+vector_collection_interactions = "interactions"
 
 # Assistant IDs
 qa_assistant_id = os.environ.get("OPENAI_ASSISTANT_ID_QA")
@@ -45,20 +50,15 @@ embedding_model_id = embedding_model_id_latest_large
 
 # page retrieval for answering questions
 # document count is recommended from 3 to 15 where 3 is minimum cost and 15 is maximum comprehensive answer
-document_count = 2
+question_context_pages_count = 2
 # interaction retrieval for identifying knowledge gaps interaction_retrieval_count is recommended from 3 to 10 where
 # 3 is minimum cost and 10 is maximum comprehensive list of questions
-interaction_retrieval_count = 5
+knowledge_gap_interaction_retrieval_count = 5
 
 # Configuration for the Nur Services API
 # get the values from the environment variables if available or use the default values
-api_host = os.environ.get("NUR_API_HOST", "localhost")
-api_port = int(os.environ.get("NUR_API_PORT", "8000"))
-
-# Name of the vector collection
-pages_collection_name = "pages"
-interactions_collection_name = "interactions"
-
+api_host = os.environ.get("NUR_API_HOST")
+api_port = int(os.environ.get("NUR_API_PORT"))
 
 # System Knowledge space name on Confluence
 system_knowledge_space_private = "Nur Documentation"

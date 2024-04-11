@@ -6,9 +6,9 @@ import threading
 from credentials import oai_api_key
 from slack.event_consumer import process_question, process_feedback
 from pydantic import BaseModel
-from vector.chroma import vectorize_document_and_store_in_db
 from configuration import api_host, api_port
-from interactions.vectorize_and_store import vectorize_interaction_and_store_in_db
+import vector.pages
+import vector.interactions
 
 processor = FastAPI()
 
@@ -63,7 +63,7 @@ def create_embeds(EmbedRequest: EmbedRequest):
     """
     # Using threading to process the embedding generation and storage without blocking the endpoint response
     page_id = EmbedRequest.page_id
-    thread = threading.Thread(target=vectorize_document_and_store_in_db, args=(page_id,))
+    thread = threading.Thread(target=vector.pages.generate_one_embedding_to_database, args=(page_id,))
     thread.start()
     return {"message": "Embedding generation initiated, processing in background", "page_id": page_id}
 
@@ -77,7 +77,7 @@ def create_interaction_embeds(InteractionEmbedRequest: InteractionEmbedRequest):
     print(f"Received interaction embed request for ID: {interaction_id}")  # Debugging line
 
     # Use threading to process the embedding generation and storage without blocking the endpoint response
-    thread = threading.Thread(target=vectorize_interaction_and_store_in_db, args=(interaction_id,))
+    thread = threading.Thread(target=vector.interactions.generate_one_embedding_to_database, args=(interaction_id,))
     thread.start()
 
     # Make sure to return a response that matches what your client expects
