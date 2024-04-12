@@ -7,12 +7,15 @@ import logging
 from datetime import datetime
 from pydantic import BaseModel
 from slack_sdk import WebClient
+
+from configuration import question_context_pages_count
 from credentials import slack_bot_user_oauth_token
-from vector.chroma import retrieve_relevant_documents
-from open_ai.assistants.query_assistant_from_documents import query_assistant_with_context
 from database.interaction_manager import QAInteractionManager
 from database.score_manager import ScoreManager
+from open_ai.assistants.query_assistant_from_documents import query_assistant_with_context
 from slack_sdk.errors import SlackApiError
+import vector.pages
+
 
 
 class QuestionEvent(BaseModel):
@@ -64,7 +67,7 @@ class EventConsumer:
         channel_id = question_event.channel
         message_ts = question_event.ts
         try:
-            context_page_ids = retrieve_relevant_documents(question_event.text)
+            context_page_ids = vector.pages.retrieve_relevant_ids(question_event.text, count=question_context_pages_count)
             response_text, assistant_thread_id = query_assistant_with_context(question_event.text, context_page_ids, None)
         except Exception as e:
             print(f"Error processing question: {e}")
@@ -108,7 +111,7 @@ class EventConsumer:
         if existing_interaction:
             extended_context_query = self.generate_extended_context_query(existing_interaction, feedback_event.text)
             print(f"\n\nExtended context: {extended_context_query}\n\n")
-            page_ids = retrieve_relevant_documents(extended_context_query)
+            page_ids = vector.pages.retrieve_relevant_ids(extended_context_query, count=question_context_pages_count)
             try:
                 response_text, assistant_thread_id = query_assistant_with_context(feedback_event.text, page_ids, assistant_thread_id)
             except Exception as e:

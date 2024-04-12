@@ -1,63 +1,22 @@
-# ./interactions/identify_knowledge_gap.py
-import chromadb
-import logging
 import json
+import logging
 from typing import List, Tuple
-from configuration import interactions_folder_path, embedding_model_id, knowledge_gap_discussions_channel_id
-from configuration import interaction_retrieval_count, interactions_collection_name
-from configuration import quizz_assistant_id
-from open_ai.embedding.embed_manager import embed_text
+
+from configuration import (
+    knowledge_gap_discussions_channel_id,
+    knowledge_gap_interaction_retrieval_count,
+    quizz_assistant_id,
+)
+from database.interaction_manager import QAInteractionManager, QAInteraction
+from database.quiz_question_manager import QuizQuestionManager
 from open_ai.assistants.utility import extract_assistant_response, initiate_client
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
-from database.interaction_manager import QAInteractionManager, QAInteraction
-from database.quiz_question_manager import QuizQuestionManager
 from slack.message_manager import post_questions_to_slack
+import vector.interactions
 
 
 logging.basicConfig(level=logging.INFO)
-
-
-def retrieve_relevant_interaction_ids(query: str) -> List[str]:
-    """
-    Retrieve the most relevant interactions for a given query using ChromaDB.
-
-    Args:
-        query (str): The query to retrieve relevant interactions for.
-
-    Returns:
-        List[str]: A list of interaction IDs of the most relevant interactions.
-    """
-
-    # Generate the query embedding using OpenAI
-    try:
-        query_embedding = embed_text(text=query, model=embedding_model_id)
-    except Exception as e:
-        logging.error(f"Error generating query embedding: {e}")
-        return []
-
-    # Initialize the ChromaDB client
-    client = chromadb.PersistentClient(path=interactions_folder_path)
-
-    collections = client.list_collections()
-    logging.info(f"Available collections: {collections}")
-
-    collection = client.get_collection(interactions_collection_name)
-
-    # Perform a similarity search in the collection
-    similar_items = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=interaction_retrieval_count
-    )
-
-    # Extract and return the interaction IDs from the results
-    if 'ids' in similar_items:
-        interaction_ids = [id for sublist in similar_items['ids'] for id in sublist]
-    else:
-        logging.warning("No 'ids' key found in similar_items, no interactions retrieved.")
-        interaction_ids = []
-
-    return interaction_ids
 
 
 def format_interactions(interactions: List['QAInteraction']) -> Tuple[str, List[str]]:
@@ -200,7 +159,7 @@ def process_and_store_questions(assistant_response_json):
     return quiz_question_dtos
 
 
-def strip_json(assistant_response):
+def strip_json(assistant_response: str):
     """
     Receives the response and extracts only the JSON from it, then returns the JSON.
     This function assumes the JSON content is wrapped in triple backticks with 'json' as a language identifier.
@@ -212,10 +171,15 @@ def strip_json(assistant_response):
         str: The extracted JSON content as a string. Returns an empty JSON array '[]' if extraction fails.
     """
     try:
-        # Attempt to find the start of the JSON content
-        start_index = assistant_response.index("```json") + len("```json")
-        end_index = assistant_response.index("```", start_index)
-        json_content = assistant_response[start_index:end_index].strip()
+        json_content = assistant_response
+
+        # Strip markdown quotes if any
+        if "```json" in assistant_response:
+            start_index = assistant_response.index("```json") + len("```json")
+            end_index = assistant_response.index("```", start_index)
+            json_content = json_content[start_index:end_index]
+
+        json_content = json_content.strip()
         # Basic validation to check if it's likely to be JSON
         if json_content.startswith("[") and json_content.endswith("]"):
             return json_content
@@ -229,7 +193,7 @@ def strip_json(assistant_response):
 
 def identify_knowledge_gaps(context):
     query = f"no information in context: {context}"
-    interaction_ids = retrieve_relevant_interaction_ids(query)
+    interaction_ids = vector.interactions.retrieve_relevant_ids(query, count=knowledge_gap_interaction_retrieval_count)
     relevant_qa_interactions = QAInteractionManager().get_interactions_by_interaction_ids(interaction_ids)
     formatted_interactions, user_ids = format_interactions(relevant_qa_interactions)
     assistant_response, thread_ids = query_assistant_with_context(context, formatted_interactions)
