@@ -45,32 +45,34 @@ def get_user_name_from_id(slack_web_client, user_id):
 
 
 class EventConsumer:
-    def __init__(self, session):
-        self.session = session
+    def __init__(self):
         self.web_client = WebClient(token=slack_bot_user_oauth_token)
-        self.interaction_manager = QAInteractionManager(session)
         logging.log(logging.DEBUG, f"Slack Event Consumer initiated successfully")
 
-    def add_question_and_response_to_database(self, question_event, response_text, assistant_thread_id):
-        self.interaction_manager.add_question_and_answer(question=question_event.text,
-                                                         answer=response_text,
-                                                         thread_id=question_event.ts,
-                                                         assistant_thread_id=assistant_thread_id,
-                                                         channel_id=question_event.channel,
-                                                         question_ts=datetime.fromtimestamp(float(question_event.ts)),
-                                                         answer_ts=datetime.now(),
-                                                         slack_user_id=question_event.user)
+    def add_question_and_response_to_database(self, session, question_event, response_text, assistant_thread_id):
+        QAInteractionManager(session).add_question_and_answer(question=question_event.text,
+                                                              answer=response_text,
+                                                              thread_id=question_event.ts,
+                                                              assistant_thread_id=assistant_thread_id,
+                                                              channel_id=question_event.channel,
+                                                              question_ts=datetime.fromtimestamp(
+                                                                  float(question_event.ts)),
+                                                              answer_ts=datetime.now(),
+                                                              slack_user_id=question_event.user)
 
-        print(f"\n\nQuestion and answer stored in the database: question: {question_event.dict()},\nAnswer: {response_text},\nAssistant_id {assistant_thread_id}\n\n")
+        print(
+            f"\n\nQuestion and answer stored in the database: question: {question_event.dict()},\nAnswer: {response_text},\nAssistant_id {assistant_thread_id}\n\n")
 
-    def process_question(self, question_event: QuestionEvent):  # TODO: Refactor this method
+    def process_question(self, session, question_event: QuestionEvent):  # TODO: Refactor this method
         channel_id = question_event.channel
         message_ts = question_event.ts
+
         try:
-            context_page_ids = vector.pages.retrieve_relevant_ids(question_event.text, count=question_context_pages_count)
+            context_page_ids = vector.pages.retrieve_relevant_ids(question_event.text,
+                                                                  count=question_context_pages_count)
             response_text, assistant_thread_id = query_assistant_with_context(question_event.text,
                                                                               context_page_ids,
-                                                                              self.session,
+                                                                              session,
                                                                               None)
         except Exception as e:
             print(f"Error processing question: {e}")
@@ -79,18 +81,20 @@ class EventConsumer:
         if response_text:
             print(f"Response from assistant: {response_text}\n")
             try:
-                self.add_question_and_response_to_database(question_event,
+                self.add_question_and_response_to_database(session,
+                                                           question_event,
                                                            response_text,
                                                            assistant_thread_id=assistant_thread_id)
                 try:
-                    ScoreManager(self.session).add_or_update_score(slack_user_id=question_event.user, category='seeker')
+                    ScoreManager(session).add_or_update_score(slack_user_id=question_event.user, category='seeker')
                     print(f"Score updated for user {question_event.user}")
                 except Exception as e:
                     print(f"Error updating score for user {question_event.user}: {e}")
                 self.web_client.chat_postMessage(channel=channel_id, text=response_text, thread_ts=message_ts)
                 print(f"\nResponse posted to Slack thread: {message_ts}\n")
             except Exception as e:
-                print(f"Error registering message as processed, adding to db and responding to the question on slack: {e}")
+                print(
+                    f"Error registering message as processed, adding to db and responding to the question on slack: {e}")
 
     def generate_extended_context_query(self, existing_interaction, feedback_text):
         extended_context_query = ""
@@ -98,14 +102,15 @@ class EventConsumer:
             extended_context_query = f"Follow up: {feedback_text}, Initial question: {existing_interaction.question_text}, Initial answer: {existing_interaction.answer_text}"
         return extended_context_query
 
-    def process_feedback(self, feedback_event: FeedbackEvent):  # TODO: Refactor this method
+    def process_feedback(self, session, feedback_event: FeedbackEvent):  # TODO: Refactor this method
         channel_id = feedback_event.channel
         message_ts = feedback_event.ts
         thread_ts = feedback_event.thread_ts
         response_text = None
+        interaction_manager = QAInteractionManager(session)
 
         try:
-            existing_interaction = self.interaction_manager.get_interaction_by_thread_id(thread_ts)
+            existing_interaction = interaction_manager.get_interaction_by_thread_id(thread_ts)
             assistant_thread_id = existing_interaction.assistant_thread_id if existing_interaction else None
             print(f"\n\nExisting interaction found: {existing_interaction}\n\n")
         except Exception as e:
@@ -117,7 +122,8 @@ class EventConsumer:
             print(f"\n\nExtended context: {extended_context_query}\n\n")
             page_ids = vector.pages.retrieve_relevant_ids(extended_context_query, count=question_context_pages_count)
             try:
-                response_text, assistant_thread_id = query_assistant_with_context(feedback_event.text, page_ids, assistant_thread_id)
+                response_text, assistant_thread_id = query_assistant_with_context(feedback_event.text, page_ids,
+                                                                                  assistant_thread_id)
             except Exception as e:
                 print(f"Error processing feedback: {e}")
                 response_text = None
@@ -125,8 +131,9 @@ class EventConsumer:
         if response_text:
             print(f"Response from assistant: {response_text}\n")
             timestamp_str = datetime.now().isoformat()
-            comment = {"text": feedback_event.text, "user": feedback_event.user, "timestamp": timestamp_str, "assistant response": response_text}
-            self.interaction_manager.add_comment_to_interaction(thread_id=thread_ts, comment=comment)
+            comment = {"text": feedback_event.text, "user": feedback_event.user, "timestamp": timestamp_str,
+                       "assistant response": response_text}
+            interaction_manager.add_comment_to_interaction(thread_id=thread_ts, comment=comment)
             print(f"Feedback appended to the interaction in the database: {feedback_event.dict()}\n")
             self.web_client.chat_postMessage(channel=channel_id, text=response_text, thread_ts=thread_ts)
             print(f"Feedback response posted to Slack thread: {message_ts}\n")
@@ -134,15 +141,13 @@ class EventConsumer:
             print(f"No response generated for feedback: {feedback_event.dict()}\n")
 
 
-# TODO: Move session call to method level
 def process_question(question_event: QuestionEvent):
     """Directly processes a question event without using the queue."""
     with get_db_session() as session:
-        EventConsumer(session).process_question(question_event)
+        EventConsumer().process_question(session, question_event)
 
 
-# TODO: Move session call to method level
 def process_feedback(feedback_event: FeedbackEvent):
     """Directly processes a feedback event without using the queue."""
     with get_db_session() as session:
-        EventConsumer(session).process_feedback(feedback_event)
+        EventConsumer().process_feedback(session, feedback_event)

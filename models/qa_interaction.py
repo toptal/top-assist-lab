@@ -1,5 +1,6 @@
 from database.database import Base
 from sqlalchemy import Column, Integer, String, Text, DateTime
+import json
 
 
 class QAInteraction(Base):
@@ -17,6 +18,6 @@ class QAInteraction(Base):
     slack_user_id = Column(String)
     question_timestamp = Column(DateTime)
     answer_timestamp = Column(DateTime)
-    comments = Column(Text)
+    comments = Column(Text, default=json.dumps([]))
     last_embedded = Column(DateTime)
-    embed = Column(Text)
+    embed = Column(Text, default=json.dumps([]))

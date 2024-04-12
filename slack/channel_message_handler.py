@@ -115,7 +115,7 @@ class ChannelMessageHandler(SlackEventHandler):
                 "channel": channel,
                 "user": user_id
             }
-            post_request(questions_endpoint, payload, data_type='Question')
+            post_request(questions_endpoint, payload)
 
         # Identify and handle feedback
         elif thread_ts in self.questions:  # Message is a reply to a question
@@ -129,7 +129,7 @@ class ChannelMessageHandler(SlackEventHandler):
                 "user": user_id,
                 "parent_question": parent_question
             }
-            post_request(feedback_endpoint, payload, data_type='Feedback')
+            post_request(feedback_endpoint, payload)
 
         else:
             logging.info(f"Skipping message with ID {ts} from user {user_id}. Reason: {skip_reason}")

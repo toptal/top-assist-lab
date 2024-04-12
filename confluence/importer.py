@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 
 from database.page_manager import PageManager
-from database.space_manager import SpaceManager
+from database.space_manager import upsert_space_info
 import vector.pages
 
 from .client import ConfluenceClient
@@ -32,7 +32,7 @@ def import_space(space_key, space_name, session):
 
     vector.pages.generate_missing_embeddings_to_database(session)
 
-    SpaceManager().upsert_space_info(
+    upsert_space_info(
         session,
         space_key=space_key,
         space_name=space_name,

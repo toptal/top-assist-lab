@@ -13,8 +13,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def retrieve_relevant_ids(question: str, count: int) -> List[int]:
     """
     Retrieve the most relevant documents for a given question using the vector database.
+
     Args:
         question (str): The question to retrieve relevant documents for.
+
     Returns:
         List[str]: A list of document IDs of the most relevant documents.
     """

@@ -130,7 +130,7 @@ def query_assistant_with_context(context, formatted_interactions, thread_id=None
     return assistant_response, thread_id
 
 
-def process_and_store_questions(assistant_response_json, db_session):
+def process_and_store_questions(assistant_response_json, session):
     """
     Processes the JSON response from the assistant, extracts questions, stores them in the database,
     and collects the QuizQuestionDTO objects.
@@ -147,7 +147,7 @@ def process_and_store_questions(assistant_response_json, db_session):
         logging.error(f"Error decoding JSON: {e}")
         return []
 
-    quiz_question_manager = QuizQuestionManager(db_session)
+    quiz_question_manager = QuizQuestionManager(session)
 
     quiz_question_dtos = []
     for item in questions_data:

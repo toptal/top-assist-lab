@@ -10,9 +10,9 @@ from visualize.pages import load_confluence_pages_spacial_distribution
 from database.database import get_db_session
 
 
-def answer_question_with_assistant(question, db_session):
+def answer_question_with_assistant(question, session):
     page_ids = vector.pages.retrieve_relevant_ids(question, count=question_context_pages_count)
-    response, thread_id = query_assistant_with_context(question, page_ids, db_session)
+    response, thread_id = query_assistant_with_context(question, page_ids, session)
     return response, thread_id
 
 

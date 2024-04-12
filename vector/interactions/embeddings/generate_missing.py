@@ -19,7 +19,7 @@ def submit_request(interaction_id):
     Submit an API request to create interaction embeds.
     :return: None
     """
-    post_request(interaction_embeds_endpoint, {"interaction_id": interaction_id}, data_type='Interaction embed')
+    post_request(interaction_embeds_endpoint, {"interaction_id": interaction_id})
 
 
 def generate_missing_embeddings_to_database(session, retry_limit: int = 3, wait_time: int = 5) -> None:

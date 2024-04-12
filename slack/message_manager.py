@@ -7,7 +7,7 @@ from interactions.quiz_question_dto import QuizQuestionDTO
 from slack_sdk.errors import SlackApiError
 
 
-def post_questions_to_slack(db_session, channel_id, quiz_question_dtos, user_ids):
+def post_questions_to_slack(session, channel_id, quiz_question_dtos, user_ids):
     """
     Posts a list of QuizQuestionDTO objects to a specified Slack channel, tags all users in the first reply,
     invites them to contribute to the information gathering related to their questions, asks them to tag domain
@@ -23,8 +23,8 @@ def post_questions_to_slack(db_session, channel_id, quiz_question_dtos, user_ids
     """
 
     client = WebClient(token=slack_bot_user_oauth_token)
-    quiz_question_manager = QuizQuestionManager(db_session)
-    score_manager = ScoreManager(db_session)
+    quiz_question_manager = QuizQuestionManager(session)
+    score_manager = ScoreManager(session)
 
     for quiz_question_dto in quiz_question_dtos:
         try:

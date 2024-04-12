@@ -2,10 +2,9 @@ import requests
 import logging
 
 
-def post_request(url, payload, headers=None, data_type=None):
+def post_request(url, payload, headers=None):
     """
     Post a request to a given URL.
-    :param data_type: Type of payload data.
     :param url: The URL to post to.
     :param payload: The payload to send.
     :param headers: The headers to send.
@@ -16,8 +15,8 @@ def post_request(url, payload, headers=None, data_type=None):
     try:
         response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
-        logging.info(f"INFO: {data_type} request submitted to {url}")
+        logging.info(f"INFO: request submitted to {url}")
     except requests.exceptions.HTTPError as e:
-        logging.error(f"ERROR: An HTTP error with {data_type} request occurred: {e}")
+        logging.error(f"ERROR: An HTTP error occurred: {e}")
     except Exception as e:
-        logging.error(f"ERROR: An error with {data_type} request occurred: {e}")
+        logging.error(f"ERROR: An error occurred: {e}")

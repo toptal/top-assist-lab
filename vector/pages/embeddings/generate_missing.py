@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 
 def submit_embedding_creation_request(page_id: str):
-    post_request(embeds_endpoint, {"page_id": page_id}, data_type='Embed')
+    post_request(embeds_endpoint, {"page_id": page_id})
 
 
 def generate_missing_embeddings_to_database(session, retry_limit: int = 3, wait_time: int = 5) -> None:

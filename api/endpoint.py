@@ -32,11 +32,11 @@ class FeedbackEvent(BaseModel):
 
 
 class EmbedRequest(BaseModel):
-    page_id: str
+    page_id: int
 
 
 class InteractionEmbedRequest(BaseModel):
-    interaction_id: str
+    interaction_id: int
 
 
 @processor.post("/api/v1/questions")
@@ -64,6 +64,7 @@ def create_embeds(EmbedRequest: EmbedRequest):
     """
     Endpoint to initiate the embedding generation and storage process in the background.
     :param EmbedRequest:
+    :return:
     """
     page_id = EmbedRequest.page_id
     thread = threading.Thread(target=vector.pages.generate_one_embedding_to_database, args=(page_id,))
