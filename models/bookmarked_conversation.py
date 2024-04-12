@@ -1,6 +1,6 @@
-# from database.database import Base
+from database.database import Base
 from sqlalchemy.ext.declarative import declarative_base
-Base = declarative_base()
+# Base = declarative_base()
 from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, DateTime
 

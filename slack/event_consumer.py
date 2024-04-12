@@ -130,12 +130,13 @@ class EventConsumer:
             print(f"No response generated for feedback: {feedback_event.dict()}\n")
 
 
+# TODO: Move session call to method level
 def process_question(question_event: QuestionEvent):
     """Directly processes a question event without using the queue."""
     with get_db_session() as session:
         EventConsumer(session).process_question(question_event)
 
-
+# TODO: Move session call to method level
 def process_feedback(feedback_event: FeedbackEvent):
     """Directly processes a feedback event without using the queue."""
     with get_db_session() as session:

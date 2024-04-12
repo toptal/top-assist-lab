@@ -165,14 +165,14 @@ Bear in mind that the Dockerized version uses a shared volume named `nur_shared_
 
 
 ```warp-runnable-command
-# Move to the poetry package
-cd code/nur/nurai
+alembic revision -m "create account table"
 # Import the model in /nurai/migrations/env.py
 # Create a new migration
 poetry run alembic revision --autogenerate -m "Initialize the db"
 # Apply the migration
 poetry run alembic upgrade head
 ```
+
 
 
 ## Network traffic

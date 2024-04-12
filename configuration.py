@@ -15,6 +15,23 @@ def get_project_root() -> str:
     return str(project_root)
 
 
+# DB configuration
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_HOST = os.environ.get("DB_HOST")
+DB_PORT = int(os.environ.get("DB_PORT"))
+DB_NAME = os.environ.get("DB_NAME")
+DB_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+
+# API configuration
+api_host = os.environ.get("NUR_API_HOST")
+api_port = int(os.environ.get("NUR_API_PORT"))
+embeds_endpoint = f'http://{api_host}:{api_port}/api/v1/embeds'
+feedback_endpoint = f'http://{api_host}:{api_port}/api/v1/feedback'
+questions_endpoint = f'http://{api_host}:{api_port}/api/v1/questions'
+interaction_embeds_endpoint = f'http://{api_host}:{api_port}/api/v1/interaction_embeds'
+
+
 logging.basicConfig(level=logging.INFO)
 
 project_path = get_project_root()
@@ -23,6 +40,7 @@ logging.log(logging.DEBUG, f"Project path: {project_path}")
 chart_folder_path = os.path.join(project_path, "content", "charts")
 sql_file_path = os.path.join(project_path, "content", "database", "confluence_pages_sql.db")
 db_url = 'sqlite:///' + sql_file_path
+
 vector_folder_path = os.path.join(project_path, "content", "vectors", "confluence_pages")
 interactions_folder_path = os.path.join(project_path, "content", "vectors", "confluence_interactions")
 
@@ -49,17 +67,6 @@ document_count = 2
 # interaction retrieval for identifying knowledge gaps interaction_retrieval_count is recommended from 3 to 10 where
 # 3 is minimum cost and 10 is maximum comprehensive list of questions
 interaction_retrieval_count = 5
-
-# Configuration for the Nur Services API
-# get the values from the environment variables if available or use the default values
-api_host = os.environ.get("NUR_API_HOST", "localhost")
-api_port = int(os.environ.get("NUR_API_PORT", "8000"))
-
-# Endpoints
-embeds_endpoint = f'http://{api_host}:{api_port}/api/v1/embeds'
-feedback_endpoint = f'http://{api_host}:{api_port}/api/v1/feedback'
-questions_endpoint = f'http://{api_host}:{api_port}/api/v1/questions'
-interaction_embeds_endpoint = f'http://{api_host}:{api_port}/api/v1/interaction_embeds'
 
 # Name of the vector collection
 pages_collection_name = "pages"
