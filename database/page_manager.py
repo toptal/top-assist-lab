@@ -57,7 +57,6 @@ class PageManager:
         Retrieve the page IDs of pages that are missing embeddings.
         :return: A list of page IDs.
         """
-        # with session as session:
         records = session.query(PageData).filter(
             (PageData.lastUpdated > PageData.last_embedded) |
             (PageData.last_embedded.is_(None))
@@ -72,7 +71,6 @@ class PageManager:
         :param space_key: Optional; the specific space key to filter pages by.
         :return: Tuple of page_ids (list of page IDs), all_documents (list of document strings), and embeddings (list of embeddings as strings)
         """
-        # with session as session:
         if space_key:
             records = session.query(PageData).filter(PageData.space_key == space_key).all()
         else:
@@ -100,7 +98,6 @@ class PageManager:
             page_id (str): The ID of the page to update.
             embed_vector: The embed vector data to be added or updated, expected to be a list of floats.
         """
-        # with session as session:
         page = session.query(PageData).filter_by(page_id=page_id).first()
 
         if page:
@@ -117,7 +114,6 @@ class PageManager:
         :param page_id: The ID of the page to find.
         :return: The page data if found, or None if not found.
         """
-        # with session as session:
         return session.query(PageData).filter_by(page_id=page_id).first()
 
     def find_pages(self, page_ids, session) -> List[PageData]:
@@ -126,7 +122,6 @@ class PageManager:
         :param page_ids: A list of page IDs to find.
         :return: A list of page data if found, or an empty list if not found.
         """
-        # with session as session:
         return session.query(PageData).filter(PageData.page_id.in_(page_ids)).all()
 
     def format_page_for_llm(self, page: PageData) -> str:

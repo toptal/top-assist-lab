@@ -122,14 +122,14 @@ def submit_create_interaction_embeds_request(interaction_id):
     post_request(interaction_embeds_endpoint, {"interaction_id": interaction_id}, data_type='Interaction embed')
 
 
-def vectorize_interactions_and_store_in_db(db, retry_limit: int = 3, wait_time: int = 5) -> None:
+def vectorize_interactions_and_store_in_db(session, retry_limit: int = 3, wait_time: int = 5) -> None:
     """
     Vectorize all interactions without embeds and store them in the database,
     with retries for failed attempts.
     """
     for attempt in range(retry_limit):
         # Retrieve interactions that are still missing embeddings.
-        interactions = get_qna_interactions_without_embeds(db)
+        interactions = get_qna_interactions_without_embeds(session)
 
         # If there are no interactions missing embeddings, exit the loop and end the process.
         if not interactions:
@@ -151,7 +151,7 @@ def vectorize_interactions_and_store_in_db(db, retry_limit: int = 3, wait_time: 
         time.sleep(wait_time)
 
         # After waiting, retrieve the list of interactions still missing embeddings to see if the list has decreased.
-        interactions = get_qna_interactions_without_embeds(db)
+        interactions = get_qna_interactions_without_embeds(session)
         if not interactions:
             print("All interactions now have embeddings. Process complete.")
             break  # Break out of the loop if there are no more interactions missing embeddings.

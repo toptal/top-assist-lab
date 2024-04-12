@@ -1,0 +1,32 @@
+version: '3.3'
+services:
+  db:
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_DB: 'top-assist'
+      POSTGRES_USER: 'toptal'
+      POSTGRES_PASSWORD: 'toptal'
+    ports:
+      - '5432:5432'
+    expose:
+      - '5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    volumes:
+      - chroma-data:/chroma/.chroma/index
+    ports:
+      - 8001:8000
+    networks:
+      - net
+
+volumes:
+  postgres-data:
+  chroma-data:
+    driver: local
+
+networks:
+  net:
+    driver: bridge

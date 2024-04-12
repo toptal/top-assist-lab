@@ -6,7 +6,6 @@ from typing import List, Tuple
 from configuration import interactions_folder_path, embedding_model_id, knowledge_gap_discussions_channel_id
 from configuration import interaction_retrieval_count, interactions_collection_name
 from configuration import quizz_assistant_id
-from database.database import get_db_session
 from open_ai.embedding.embed_manager import embed_text
 from open_ai.assistants.utility import extract_assistant_response, initiate_client
 from open_ai.assistants.thread_manager import ThreadManager
@@ -213,14 +212,18 @@ def strip_json(assistant_response):
         str: The extracted JSON content as a string. Returns an empty JSON array '[]' if extraction fails.
     """
     try:
-        # Attempt to find the start of the JSON content
-        if assistant_response.find("```json") == 1:
+        json_content = assistant_response
+
+        # Strip markdown quotes if any
+        if "```json" in assistant_response:
             start_index = assistant_response.index("```json") + len("```json")
             end_index = assistant_response.index("```", start_index)
-            assistant_response = assistant_response[start_index:end_index].strip()
+            json_content = json_content[start_index:end_index]
+
+        json_content = json_content.strip()
         # Basic validation to check if it's likely to be JSON
-        if assistant_response.startswith("[") and assistant_response.endswith("]"):
-            return assistant_response
+        if json_content.startswith("[") and json_content.endswith("]"):
+            return json_content
         else:
             logging.error("Extracted content does not appear to be valid JSON.")
             return "[]"

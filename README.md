@@ -161,6 +161,20 @@ If the above works, you should see Nur's manager command prompt - the same thing
 
 Bear in mind that the Dockerized version uses a shared volume named `nur_shared_content`. This is bootstrapped during the first installation, but will persist until it is manually removed.
 
+## Add a new data model using Alembic
+
+
+```warp-runnable-command
+# Move to the poetry package
+cd code/nur/nurai
+# Import the model in /nurai/migrations/env.py
+# Create a new migration
+poetry run alembic revision --autogenerate -m "Initialize the db"
+# Apply the migration
+poetry run alembic upgrade head
+```
+
+
 ## Network traffic
 
 1. Outgoing to Open AI API (for Embeds and completion)
