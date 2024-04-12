@@ -6,7 +6,6 @@ from database.interaction_manager import QAInteractionManager
 from open_ai.embedding.embed_manager import embed_text
 from database.database import get_db_session
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -26,6 +25,7 @@ def format_comment(raw_comment):
         timestamp = comment["timestamp"]
         formatted_comments.append(f"{text} (Comment by {user} on {timestamp})")
     return ' '.join(formatted_comments)
+
 
 def format_interaction(interaction):
     """

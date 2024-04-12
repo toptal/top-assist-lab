@@ -6,7 +6,7 @@ from slack_sdk.socket_mode.request import SocketModeRequest
 from slack_sdk.socket_mode.response import SocketModeResponse
 
 from api.request import post_request
-from configuration import slack_require_enterprise_id, slack_require_team_id, questions_endpoint, feedback_endpoint
+from configuration import slack_allow_enterprise_id, slack_allow_team_id, questions_endpoint, feedback_endpoint
 from database.interaction_manager import QAInteractionManager
 from database.database import get_db_session
 
@@ -45,10 +45,10 @@ class ChannelMessageHandler(SlackEventHandler):
 
     def is_authorized(self, enterprise_id: str, team_id: str) -> bool:
         """Authorize the request based on the enterprise_id and team_id"""
-        if slack_require_enterprise_id and slack_require_enterprise_id != enterprise_id:
+        if slack_allow_enterprise_id != '*' and slack_allow_enterprise_id != enterprise_id:
             return False
 
-        if slack_require_team_id and slack_require_team_id != team_id:
+        if slack_allow_team_id != '*' and slack_allow_team_id != team_id:
             return False
 
         return True

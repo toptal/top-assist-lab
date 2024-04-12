@@ -1,7 +1,7 @@
-# ./interactions/identify_knowledge_gap.py
 import json
 import logging
 from typing import List, Tuple
+
 from configuration import (
     knowledge_gap_discussions_channel_id,
     knowledge_gap_interaction_retrieval_count,

@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 from pydantic import BaseModel
 from slack_sdk import WebClient
+
 from configuration import question_context_pages_count
 from credentials import slack_bot_user_oauth_token
 from database.interaction_manager import QAInteractionManager
@@ -15,6 +16,7 @@ from open_ai.assistants.query_assistant_from_documents import query_assistant_wi
 from database.database import get_db_session
 from slack_sdk.errors import SlackApiError
 import vector.pages
+
 
 class QuestionEvent(BaseModel):
     text: str
