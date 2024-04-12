@@ -23,6 +23,13 @@ DB_PORT = int(os.environ.get("DB_PORT"))
 DB_NAME = os.environ.get("DB_NAME")
 DB_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
+# Chroma vector database configuration
+chroma_host = os.environ.get("CHROMA_HOST")
+chroma_port = int(os.environ.get("CHROMA_PORT"))
+chroma_database = os.environ.get("CHROMA_DATABASE")
+vector_collection_pages = "pages"
+vector_collection_interactions = "interactions"
+
 # API configuration
 api_host = os.environ.get("NUR_API_HOST")
 api_port = int(os.environ.get("NUR_API_PORT"))
@@ -63,14 +70,10 @@ embedding_model_id = embedding_model_id_latest_large
 
 # page retrieval for answering questions
 # document count is recommended from 3 to 15 where 3 is minimum cost and 15 is maximum comprehensive answer
-document_count = 2
+question_context_pages_count = 2
 # interaction retrieval for identifying knowledge gaps interaction_retrieval_count is recommended from 3 to 10 where
 # 3 is minimum cost and 10 is maximum comprehensive list of questions
-interaction_retrieval_count = 5
-
-# Name of the vector collection
-pages_collection_name = "pages"
-interactions_collection_name = "interactions"
+knowledge_gap_interaction_retrieval_count = 5
 
 
 # System Knowledge space name on Confluence

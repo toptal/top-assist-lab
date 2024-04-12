@@ -1,18 +1,18 @@
 # ./main.py
+from configuration import question_context_pages_count
 from confluence.importer import tui_choose_space, import_space
 from interactions.identify_knowledge_gap import identify_knowledge_gaps
-from interactions.vectorize_and_store import vectorize_interactions_and_store_in_db
 from open_ai.assistants.openai_assistant import load_manage_assistants
 from open_ai.assistants.query_assistant_from_documents import query_assistant_with_context
-from vector.chroma import retrieve_relevant_documents
-from vector.create_interaction_db import VectorInteractionManager
+import vector.pages
+import vector.interactions
 from visualize.pages import load_confluence_pages_spacial_distribution
 from database.database import get_db_session
 
 
 def answer_question_with_assistant(question, db_session):
-    relevant_document_ids = retrieve_relevant_documents(question)
-    response, thread_id = query_assistant_with_context(question, relevant_document_ids, db_session)
+    page_ids = vector.pages.retrieve_relevant_ids(question, count=question_context_pages_count)
+    response, thread_id = query_assistant_with_context(question, page_ids, db_session)
     return response, thread_id
 
 
@@ -60,8 +60,8 @@ def main_menu():
         elif choice == "3":
             print("Creating vector db for interactions")
             with get_db_session() as session:
-                vectorize_interactions_and_store_in_db(session)
-                VectorInteractionManager().add_to_vector(session)
+                vector.interactions.generate_missing_embeddings_to_database(session)
+                vector.interactions.import_from_database(session)
 
         elif choice == "4":
             load_manage_assistants()

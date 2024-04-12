@@ -1,6 +1,5 @@
 # ./oai_assistants/assistant_manager.py
 import json
-from open_ai.assistants.utility import initiate_client
 
 
 class AssistantManager:
