@@ -10,17 +10,6 @@ from configuration import embedding_model_id
 from configuration import interaction_embeds_endpoint
 import requests
 
-#  TODO: Remove
-# def get_qna_interactions_from_database(db_session):
-#     """
-#     Fetch all Q&A interactions from the database.
-#
-#     Returns:
-#     list: A list of QAInteraction objects.
-#     """
-#     return QAInteractionManager(db_session).get_qa_interactions()
-
-
 
 def get_qna_interactions_without_embeds(db_session):
     """

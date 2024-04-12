@@ -1,11 +1,11 @@
 from database.database import Base
-from sqlalchemy.ext.declarative import declarative_base
-# Base = declarative_base()
 from sqlalchemy import Column, Integer, String, Text, DateTime
-import json  # TODO Can we switch to sqlalchemy JSON type?
 
 
 class QAInteraction(Base):
+    """
+    SQLAlchemy model for storing QA interactions.
+    """
     __tablename__ = 'qa_interactions'
 
     id = Column(Integer, primary_key=True)
@@ -17,6 +17,6 @@ class QAInteraction(Base):
     slack_user_id = Column(String)
     question_timestamp = Column(DateTime)
     answer_timestamp = Column(DateTime)
-    comments = Column(Text, default=json.dumps([]))
+    comments = Column(Text)
     last_embedded = Column(DateTime)
-    embed = Column(Text, default=json.dumps([]))
+    embed = Column(Text)

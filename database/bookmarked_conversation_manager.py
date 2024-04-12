@@ -2,21 +2,15 @@ from models.bookmarked_conversation import BookmarkedConversation
 from datetime import datetime, timezone
 
 
-class BookmarkedConversationManager:
-    def __init__(self, session):
-        self.session = session
+def add_bookmarked_conversation(session, title, body, thread_id):
+    new_conversation = BookmarkedConversation(title=title, body=body, thread_id=thread_id)
+    session.add(new_conversation)
+    session.commit()
 
-    def add_bookmarked_conversation(self, title, body, thread_id):
-        BookmarkedConversation().create_or_update(self.session,
-                                                  title=title,
-                                                  body=body,
-                                                  thread_id=thread_id)
 
-    def update_posted_on_confluence(self, thread_id):
-        BookmarkedConversation().create_or_update(self.session,
-                                                  thread_id=thread_id,
-                                                  posted_on_confluence=datetime.now(timezone.utc))
+def update_posted_on_confluence(session, thread_id):
+    conversation = session.query(BookmarkedConversation).filter_by(thread_id=thread_id).first()
+    if conversation:
+        conversation.posted_on_confluence = datetime.now(timezone.utc)
+        session.commit()
         print(f"Updated conversation with thread ID {thread_id} with timestamp")
-
-    def get_unposted_conversations(self):
-        return self.session.query(BookmarkedConversation).filter_by(posted_on_confluence=None).all()

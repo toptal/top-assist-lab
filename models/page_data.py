@@ -1,9 +1,5 @@
 from database.database import Base
-from sqlalchemy.ext.declarative import declarative_base
-# Base = declarative_base()
 from sqlalchemy import Column, Integer, String, Text, DateTime
-import json  # TODO Can we switch to sqlalchemy JSON type?
-
 
 
 class PageData(Base):
@@ -20,7 +16,7 @@ class PageData(Base):
     createdDate = Column(DateTime)
     lastUpdated = Column(DateTime)
     content = Column(Text)
-    comments = Column(Text, default=json.dumps([]))
+    comments = Column(Text)
     last_embedded = Column(DateTime)
-    embed = Column(Text, default=json.dumps([]))
+    embed = Column(Text)
 

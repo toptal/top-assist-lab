@@ -6,7 +6,7 @@ from confluence.system_knowledge_manager import create_page_on_confluence
 from database.score_manager import ScoreManager
 from slack.event_consumer import get_user_name_from_id
 from slack_sdk.errors import SlackApiError
-from database.bookmarked_conversation_manager import BookmarkedConversationManager
+from database.bookmarked_conversation_manager import add_bookmarked_conversation, update_posted_on_confluence
 from slack.message_manager import get_message_replies
 from database.database import get_db_session
 
@@ -132,11 +132,13 @@ def process_bookmark_added_event(slack_web_client, event):
             body = "\n".join([message.get("text", "") for message in bookmarked_conversation_messages[1:]])
 
             with get_db_session() as session:
-                bookmarked_conversation_manager = BookmarkedConversationManager(session)
-                bookmarked_conversation_manager.add_bookmarked_conversation(title=title, body=body, thread_id=item_ts)
+                add_bookmarked_conversation(session,
+                                            title=title,
+                                            body=body,
+                                            thread_id=item_ts)
                 print(f"Bookmarked conversation added to the database: {title}")
                 create_page_on_confluence(title, body)
-                bookmarked_conversation_manager.update_posted_on_confluence(item_ts)
+                update_posted_on_confluence(session, item_ts)
 
         else:
             print("No messages found for the bookmarked conversation.")

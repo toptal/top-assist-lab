@@ -77,7 +77,9 @@ class EventConsumer:
         if response_text:
             print(f"Response from assistant: {response_text}\n")
             try:
-                self.add_question_and_response_to_database(question_event, response_text, assistant_thread_id=assistant_thread_id)
+                self.add_question_and_response_to_database(question_event,
+                                                           response_text,
+                                                           assistant_thread_id=assistant_thread_id)
                 try:
                     ScoreManager(self.session).add_or_update_score(slack_user_id=question_event.user, category='seeker')
                     print(f"Score updated for user {question_event.user}")
@@ -135,6 +137,7 @@ def process_question(question_event: QuestionEvent):
     """Directly processes a question event without using the queue."""
     with get_db_session() as session:
         EventConsumer(session).process_question(question_event)
+
 
 # TODO: Move session call to method level
 def process_feedback(feedback_event: FeedbackEvent):

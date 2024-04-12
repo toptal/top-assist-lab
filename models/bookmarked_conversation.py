@@ -1,11 +1,12 @@
 from database.database import Base
-from sqlalchemy.ext.declarative import declarative_base
-# Base = declarative_base()
 from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, DateTime
 
 
 class BookmarkedConversation(Base):
+    """
+    SQLAlchemy model for storing bookmarked conversations.
+    """
     __tablename__ = 'bookmarked_conversations'
 
     id = Column(Integer, primary_key=True)
