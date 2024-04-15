@@ -47,10 +47,13 @@ def create_question(question_event: QuestionEvent):
 
 
 @processor.post("/api/v1/feedback")
-def create_feedback(feedback_event: FeedbackEvent):  # Changed to handle feedback
-    # Assuming you have a separate or modified process for handling feedback
-    thread = threading.Thread(target=process_feedback,
-                              args=(feedback_event,))  # You may need a different function for processing feedback
+def create_feedback(feedback_event: FeedbackEvent):
+    """
+    Endpoint to initiate the feedback processing in the background.
+    :param feedback_event:
+    :return:
+    """
+    thread = threading.Thread(target=process_feedback, args=(feedback_event,))
     thread.start()
     return {"message": "Feedback received, processing in background", "data": feedback_event}
 
@@ -60,8 +63,9 @@ def create_feedback(feedback_event: FeedbackEvent):  # Changed to handle feedbac
 def create_embeds(EmbedRequest: EmbedRequest):
     """
     Endpoint to initiate the embedding generation and storage process in the background.
+    :param EmbedRequest:
+    :return:
     """
-    # Using threading to process the embedding generation and storage without blocking the endpoint response
     page_id = EmbedRequest.page_id
     thread = threading.Thread(target=vector.pages.generate_one_embedding_to_database, args=(page_id,))
     thread.start()
@@ -72,11 +76,11 @@ def create_embeds(EmbedRequest: EmbedRequest):
 def create_interaction_embeds(InteractionEmbedRequest: InteractionEmbedRequest):
     """
     Endpoint to initiate the embedding generation and storage process in the background.
+    :param InteractionEmbedRequest:
+    :return:
     """
     interaction_id = InteractionEmbedRequest.interaction_id
     print(f"Received interaction embed request for ID: {interaction_id}")  # Debugging line
-
-    # Use threading to process the embedding generation and storage without blocking the endpoint response
     thread = threading.Thread(target=vector.interactions.generate_one_embedding_to_database, args=(interaction_id,))
     thread.start()
 

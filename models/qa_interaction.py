@@ -1,11 +1,10 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, DateTime
-import json
-
-Base = declarative_base()
+from .base import *
 
 
 class QAInteraction(Base):
+    """
+    SQLAlchemy model for storing QA interactions.
+    """
     __tablename__ = 'qa_interactions'
 
     id = Column(Integer, primary_key=True)

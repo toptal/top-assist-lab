@@ -118,48 +118,52 @@ The version that `asdf` will use for the current project is declared in `.tool-v
 2. Follow the instructions in the files to fill in the values
 
 
-### Run Nur via shell
+### Run Top-Assist
 
 ````
-git clone https://github.com/MDGrey33/Nur.git
-cd Nur
+git clone https://github.com/toptal/top-assist
+cd top-assist
 poetry install
-poetry run python main.py
+PYTHONPATH=. poetry run python main.py
 ````
 
-`poetry run python ./main.py` (for the menu operations)
+`PYTHONPATH=. poetry run python main.py` (for the menu operations)
 
-`poetry run python ./api/endpoint.py` (API / uvicorn web server)
+`PYTHONPATH=. poetry run python api/endpoint.py` (API / uvicorn web server)
 
 Refer to the ./documentation/slack_app_manifest_installation_guide.md for slack bot setup
 
-`poetry run python ./slack/bot.py` (slack bot stream listener)
+`PYTHONPATH=. poetry run python slack/bot.py` (slack bot stream listener)
 
-### Run Nur via Docker
+### Run DBs
 
-We will use docker compose to build 3 containers of Nur. Each one is used to run a separate part of the app:
-* `nur-manager` will create a container allowing us to use `main.py` functionality. It is meant to be interactive (read further for details).
-* `nur-web` starts the web application.
-* `nur-slack` starts the slack integration script.
+Top Assist uses two databases: `postgresql` and `chroma`.  
+Please be sure that you set all the required environment variables in the `.env` file in `# Database` section.
+To run the databases, you can use docker-compose
 
-First off, run the composer script:
 ```
-git clone https://github.com/MDGrey33/Nur.git
-cd Nur
 docker composer up
+poetry run alembic upgrade head     # to setup PostgreSQL database
 ```
 
-Upon successful completion, you have three containers running, all of them sharing a common volume mounted at `/content` within the containers.
 
-`nur-web` and `nur-slack` should be fully operational already. If you wish to run commands in Nur's cli interface, you will need to attach a shell to the `nur-manager` container in interactive mode, and enter the management environment:
+### DB Migrations
 
+1) Import the model in `alembic/env.py` and run:
 ```
-./bin/manage
+poetry run alembic revision --autogenerate -m "Add my new model"
 ```
+Alembic will detect the changes in the models/tables and create a new migration file.  
+Be aware that it can remove empty indexes/fields.  
+If you need to have control over the migration you can remove the `--autogenerate` flag and write the migration manually.  
 
-If the above works, you should see Nur's manager command prompt - the same thing you should see when running `./main.py` locally.
 
-Bear in mind that the Dockerized version uses a shared volume named `nur_shared_content`. This is bootstrapped during the first installation, but will persist until it is manually removed.
+2) Apply the migration:  
+`poetry run alembic upgrade head`
+
+3) To rollback last N migrations run:  
+`poetry run alembic downgrade -N`
+
 
 ## Network traffic
 

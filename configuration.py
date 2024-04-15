@@ -15,6 +15,30 @@ def get_project_root() -> str:
     return str(project_root)
 
 
+# DB configuration
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_HOST = os.environ.get("DB_HOST")
+DB_PORT = int(os.environ.get("DB_PORT"))
+DB_NAME = os.environ.get("DB_NAME")
+DB_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+
+# Chroma vector database configuration
+chroma_host = os.environ.get("CHROMA_HOST")
+chroma_port = int(os.environ.get("CHROMA_PORT"))
+chroma_database = os.environ.get("CHROMA_DATABASE")
+vector_collection_pages = "pages"
+vector_collection_interactions = "interactions"
+
+# API configuration
+api_host = os.environ.get("NUR_API_HOST")
+api_port = int(os.environ.get("NUR_API_PORT"))
+embeds_endpoint = f'http://{api_host}:{api_port}/api/v1/embeds'
+feedback_endpoint = f'http://{api_host}:{api_port}/api/v1/feedback'
+questions_endpoint = f'http://{api_host}:{api_port}/api/v1/questions'
+interaction_embeds_endpoint = f'http://{api_host}:{api_port}/api/v1/interaction_embeds'
+
+
 logging.basicConfig(level=logging.INFO)
 
 project_path = get_project_root()
@@ -24,12 +48,6 @@ chart_folder_path = os.path.join(project_path, "content", "charts")
 sql_file_path = os.path.join(project_path, "content", "database", "confluence_pages_sql.db")
 db_url = 'sqlite:///' + sql_file_path
 
-# Chroma vector database configuration
-chroma_host = os.environ.get("CHROMA_HOST")
-chroma_port = int(os.environ.get("CHROMA_PORT"))
-chroma_database = os.environ.get("CHROMA_DATABASE")
-vector_collection_pages = "pages"
-vector_collection_interactions = "interactions"
 
 # Assistant IDs
 qa_assistant_id = os.environ.get("OPENAI_ASSISTANT_ID_QA")
@@ -55,10 +73,6 @@ question_context_pages_count = 2
 # 3 is minimum cost and 10 is maximum comprehensive list of questions
 knowledge_gap_interaction_retrieval_count = 5
 
-# Configuration for the Nur Services API
-# get the values from the environment variables if available or use the default values
-api_host = os.environ.get("NUR_API_HOST")
-api_port = int(os.environ.get("NUR_API_PORT"))
 
 # System Knowledge space name on Confluence
 system_knowledge_space_private = "Nur Documentation"

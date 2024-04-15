@@ -1,6 +1,5 @@
 # ./open_ai/embedding/embed_manager.py
 import openai
-import json
 from credentials import oai_api_key
 
 client = openai.OpenAI(api_key=oai_api_key)

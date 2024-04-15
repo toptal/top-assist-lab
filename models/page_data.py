@@ -1,8 +1,4 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, DateTime
-import json
-
-Base = declarative_base()
+from .base import *
 
 
 class PageData(Base):
@@ -22,3 +18,4 @@ class PageData(Base):
     comments = Column(Text, default=json.dumps([]))
     last_embedded = Column(DateTime)
     embed = Column(Text, default=json.dumps([]))
+

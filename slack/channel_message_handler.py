@@ -1,45 +1,48 @@
 import logging
-import requests
 
 from slack_sdk import WebClient
 from slack_sdk.socket_mode import SocketModeClient
 from slack_sdk.socket_mode.request import SocketModeRequest
 from slack_sdk.socket_mode.response import SocketModeResponse
 
-from configuration import api_host, api_port, slack_allow_enterprise_id, slack_allow_team_id
+from api.request import post_request
+from configuration import slack_allow_enterprise_id, slack_allow_team_id, questions_endpoint, feedback_endpoint
 from database.interaction_manager import QAInteractionManager
+from database.database import get_db_session
 
 from .event_handler import SlackEventHandler
 from .reaction_manager import process_checkmark_added_event, process_bookmark_added_event
+
 
 class ChannelMessageHandler(SlackEventHandler):
     """Handles incoming messages from the channel and publishes questions and feedback to the persist queue"""
 
     def __init__(self):
-        self.interaction_manager = QAInteractionManager()
         self.processed_messages = set()
         self.questions = {}
         self.load_processed_data()
 
     def load_processed_data(self):
         """ Load processed messages and questions from the database """
-        try:
-            interactions = self.interaction_manager.get_qa_interactions()
-        except Exception as e:
-            logging.error(f"Error loading processed messages and questions: {e}")
-            interactions = []
-        for interaction in interactions:
-            # Add to processed messages
+        with get_db_session() as session:
             try:
-                self.processed_messages.add(interaction.thread_id)
+                interactions = QAInteractionManager().get_qa_interactions(session)
             except Exception as e:
-                logging.error(f"Error adding processed message to interaction: {e}")
-            # If it's a question, add to questions
-            if interaction.question_text:
+                logging.error(f"Error loading processed messages and questions: {e}")
+                interactions = []
+
+            for interaction in interactions:
+                # Add to processed messages
                 try:
-                    self.questions[interaction.thread_id] = interaction.question_text
+                    self.processed_messages.add(interaction.thread_id)
                 except Exception as e:
-                    logging.error(f"Error adding question to interaction: {e}")
+                    logging.error(f"Error adding processed message to interaction: {e}")
+                # If it's a question, add to questions
+                if interaction.question_text:
+                    try:
+                        self.questions[interaction.thread_id] = interaction.question_text
+                    except Exception as e:
+                        logging.error(f"Error adding question to interaction: {e}")
 
     def is_authorized(self, enterprise_id: str, team_id: str) -> bool:
         """Authorize the request based on the enterprise_id and team_id"""
@@ -106,28 +109,20 @@ class ChannelMessageHandler(SlackEventHandler):
         if "?" in text and (not thread_ts):  # It's a question if not part of another thread
             logging.debug(f"Question identified: {text}")
             self.questions[ts] = text
-            question_event = {
+            payload = {
                 "text": text,  # Message content
                 "ts": ts,  # Message timestamp acting as unique ID in slack
                 "thread_ts": "",  # Knowing it's a question on the main channel, we can set this to empty string
                 "channel": channel,
                 "user": user_id
             }
-            # publish question event to the persist queue
-            try:
-                # Make an API call to publish the question
-                response = requests.post(f'http://{api_host}:{api_port}/api/v1/questions/', json=question_event)
-                response.raise_for_status()
-                logging.info(f"Question event published: {question_event}")
-
-            except Exception as e:
-                logging.error(f"Error publishing question event: {e}")
+            post_request(questions_endpoint, payload)
 
         # Identify and handle feedback
         elif thread_ts in self.questions:  # Message is a reply to a question
             parent_question = self.questions[thread_ts]
             logging.debug(f"Feedback identified for question '{parent_question}': {text}")
-            feedback_event = {
+            payload = {
                 "text": text,  # Message content
                 "ts": ts,  # Message timestamp acting as unique ID in slack
                 "thread_ts": thread_ts,  # Parent message timestamp used to link feedback to question
@@ -135,16 +130,8 @@ class ChannelMessageHandler(SlackEventHandler):
                 "user": user_id,
                 "parent_question": parent_question
             }
-            # publish feedback event to the persist queue
-            try:
-                # Make an API call to publish the feedback
-                response = requests.post(f'http://{api_host}:{api_port}/api/v1/feedback/', json=feedback_event)
-                response.raise_for_status()
-                logging.info(f"Feedback published: {feedback_event}")
-            except Exception as e:
-                logging.error(f"Error publishing feedback event: {e}")
+            post_request(feedback_endpoint, payload)
 
-        # Skip all other messages
         else:
             logging.info(f"Skipping message with ID {ts} from user {user_id}. Reason: {skip_reason}")
 

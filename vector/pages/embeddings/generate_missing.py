@@ -1,28 +1,16 @@
 import logging
-import requests
 import time
 
-from configuration import api_host, api_port
 from database.page_manager import PageManager
-
+from api.request import post_request
+from configuration import embeds_endpoint
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def submit_embedding_creation_request(page_id: str):
-    endpoint_url = f'http://{api_host}:{api_port}/api/v1/embeds'
-    headers = {"Content-Type": "application/json"}
-    payload = {"page_id": page_id}
-
-    try:
-        response = requests.post(endpoint_url, json=payload, headers=headers)
-        response.raise_for_status()  # This will raise for HTTP errors
-        logging.info(f"Embedding creation request successful for page ID {page_id}.")
-    except requests.exceptions.HTTPError as e:
-        logging.error(f"HTTP error occurred while submitting embedding creation request for page ID {page_id}: {e}")
-    except Exception as e:
-        logging.error(f"An error occurred while submitting embedding creation request for page ID {page_id}: {e}")
+    post_request(embeds_endpoint, {"page_id": page_id})
 
 
 def generate_missing_embeddings_to_database(retry_limit: int = 3, wait_time: int = 5) -> None:

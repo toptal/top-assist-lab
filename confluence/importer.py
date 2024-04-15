@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 
 from database.page_manager import PageManager
-from database.space_manager import SpaceManager
+from database.space_manager import upsert_space_info
 import vector.pages
 
 from .client import ConfluenceClient
@@ -28,17 +28,14 @@ def tui_choose_space():
 
 
 def import_space(space_key, space_name):
-    import_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-    pages = retrieve_space(space_key)
-    PageManager().store_pages_data(space_key, pages)
+    PageManager().store_pages_data(space_key, retrieve_space(space_key))
 
     vector.pages.generate_missing_embeddings_to_database()
 
-    SpaceManager().upsert_space_info(
+    upsert_space_info(
         space_key=space_key,
         space_name=space_name,
-        last_import_date=import_date
+        last_import_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     )
 
     vector.pages.import_from_database(space_key)

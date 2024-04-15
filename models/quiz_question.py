@@ -1,10 +1,10 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, DateTime
-
-Base = declarative_base()
+from .base import *
 
 
 class QuizQuestion(Base):
+    """
+    SQLAlchemy model for storing quiz questions.
+    """
     __tablename__ = 'quiz_questions'
 
     id = Column(Integer, primary_key=True)
@@ -13,4 +13,3 @@ class QuizQuestion(Base):
     summary = Column(Text)
     posted_on_slack = Column(DateTime)
     posted_on_confluence = Column(DateTime, nullable=True)
-

@@ -23,8 +23,6 @@ def post_questions_to_slack(channel_id, quiz_question_dtos, user_ids):
     """
 
     client = WebClient(token=slack_bot_user_oauth_token)
-    quiz_question_manager = QuizQuestionManager()
-    score_manager = ScoreManager()
 
     for quiz_question_dto in quiz_question_dtos:
         try:
@@ -33,7 +31,7 @@ def post_questions_to_slack(channel_id, quiz_question_dtos, user_ids):
             quiz_question_dto.thread_id = response["ts"]
 
             # Update the thread ID in the database
-            quiz_question_manager.update_with_thread_id(
+            QuizQuestionManager().update_with_thread_id(
                 question_id=quiz_question_dto.id,
                 thread_id=quiz_question_dto.thread_id
             )
@@ -51,7 +49,7 @@ def post_questions_to_slack(channel_id, quiz_question_dtos, user_ids):
 
             # Award points to each revealer
             for user_id in user_ids:
-                score_manager.add_or_update_score(user_id, category='revealer', points=1)
+                ScoreManager().add_or_update_score(user_id, category='revealer')
 
         except Exception as e:
             print(f"Exception occurred while posting message to Slack: {e}")

@@ -6,17 +6,17 @@ from confluence.system_knowledge_manager import create_page_on_confluence
 from database.score_manager import ScoreManager
 from slack.event_consumer import get_user_name_from_id
 from slack_sdk.errors import SlackApiError
-from database.bookmarked_conversation_manager import BookmarkedConversationManager
+from database.bookmarked_conversation_manager import add_bookmarked_conversation, update_posted_on_confluence
 from slack.message_manager import get_message_replies
+from database.database import get_db_session
 
 
 def get_top_users_by_category(slack_web_client):
-    score_manager = ScoreManager()
     categories = ['seeker', 'revealer', 'luminary']
     top_users_by_category = {}
 
     for category in categories:
-        top_users = score_manager.get_top_users(category)
+        top_users = ScoreManager().get_top_users(category)
         # Fetch user names from Slack and format the user data for posting
         formatted_users = []
         for user in top_users:
@@ -53,8 +53,7 @@ def post_top_users_in_categories(slack_web_client, channel):
 def process_checkmark_added_event(slack_web_client, event):
     print(f"Reaction event identified:\n{event}")
 
-    quiz_question_manager = QuizQuestionManager()
-    timestamps = quiz_question_manager.get_unposted_questions_timestamps()
+    timestamps = QuizQuestionManager().get_unposted_questions_timestamps()
     # Convert timestamps to strings, as Slack timestamps are string values
     timestamps_str = [str(ts) for ts in timestamps]
     # Extract the timestamp of the item to which the reaction was added
@@ -69,14 +68,12 @@ def process_checkmark_added_event(slack_web_client, event):
         channel = event.get("item", {}).get("channel")
         knowledge_gathering_messages = get_message_replies(slack_web_client, channel, item_ts)
 
-        score_manager = ScoreManager()
-
         # Extract unique user IDs from the replies
         replied_user_ids = set(message.get("user") for message in knowledge_gathering_messages if "user" in message)
 
         # Update luminary score for each user who replied
         for user_id in replied_user_ids:
-            score_manager.add_or_update_score(user_id, category='luminary', points=1)
+            ScoreManager().add_or_update_score(user_id, category='luminary')
 
         for knowledge_gathering_message in knowledge_gathering_messages:
             # generate a string containing all the messages to include as context by appending them all
@@ -103,13 +100,12 @@ def process_checkmark_added_event(slack_web_client, event):
     else:
         return
 
-    # Extract the page title and content into a new dictionary
     extracted_info = {
         "page_title": response_dict["page_title"],
         "page_content": response_dict["page_content"]
     }
 
-    quiz_question_manager.update_with_summary_by_thread_id(thread_id=item_ts, summary=cleaned_json_string)
+    QuizQuestionManager().update_with_summary_by_thread_id(thread_id=item_ts, summary=cleaned_json_string)
     create_page_on_confluence(extracted_info["page_title"], extracted_info["page_content"])
     # After processing the checkmark reaction, post the top users
     channel = event.get("item", {}).get("channel")  # Assuming this is the channel ID
@@ -118,13 +114,10 @@ def process_checkmark_added_event(slack_web_client, event):
 
 def process_bookmark_added_event(slack_web_client, event):
     print(f"Bookmark reaction event identified:\n{event}")
-
-    # Extract the channel and timestamp (ts) of the message that received the bookmark reaction
     channel = event.get("item", {}).get("channel")
     item_ts = event.get("item", {}).get("ts")
 
     try:
-        # Use the get_message_replies function to fetch the conversation
         bookmarked_conversation_messages = get_message_replies(slack_web_client, channel, item_ts)
 
         if bookmarked_conversation_messages:
@@ -133,16 +126,14 @@ def process_bookmark_added_event(slack_web_client, event):
             # Join the text of all replies to form the body, skipping the first message which is the title
             body = "\n".join([message.get("text", "") for message in bookmarked_conversation_messages[1:]])
 
-            # Initialize the BookmarkedConversationManager
-            bookmarked_conversation_manager = BookmarkedConversationManager()
-
-            # Add the bookmarked conversation to the database
-            bookmarked_conversation_manager.add_bookmarked_conversation(title=title, body=body, thread_id=item_ts)
-            print(f"Bookmarked conversation added to the database: {title}")
-
-            # Add conversation on confluence
-            create_page_on_confluence(title, body)
-            bookmarked_conversation_manager.update_posted_on_confluence(item_ts)
+            with get_db_session() as session:
+                add_bookmarked_conversation(session,
+                                            title=title,
+                                            body=body,
+                                            thread_id=item_ts)
+                print(f"Bookmarked conversation added to the database: {title}")
+                create_page_on_confluence(title, body)
+                update_posted_on_confluence(session, item_ts)
 
         else:
             print("No messages found for the bookmarked conversation.")

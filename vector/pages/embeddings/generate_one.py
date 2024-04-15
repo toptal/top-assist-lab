@@ -2,6 +2,7 @@ import logging
 
 from configuration import embedding_model_id
 from database.page_manager import PageManager
+from database.database import get_db_session
 from open_ai.embedding.embed_manager import embed_text
 
 
@@ -14,13 +15,14 @@ def generate_one_embedding_to_database(page_id):
     :param page_id: The ID of the page to vectorize.
     :return: None
     """
-    page = PageManager().find_page(page_id)
-    if not page:
-        logging.error(f"Page content for page ID {page_id} could not be retrieved.")
-        return
+    with get_db_session() as session:
+        page = PageManager().find_page(page_id, session)
+        if not page:
+            logging.error(f"Page content for page ID {page_id} could not be retrieved.")
+            return
 
-    page_content = PageManager().format_page_for_llm(page)
-    page_content = page_content[:8190] # Ensure the content does not exceed the maximum token limit
+        page_content = PageManager().format_page_for_llm(page)
+        page_content = page_content[:8190]  # Ensure the content does not exceed the maximum token limit
     try:
         # embed_text now returns a serialized JSON string of the embedding vector
         embedding = embed_text(text=page_content, model=embedding_model_id)

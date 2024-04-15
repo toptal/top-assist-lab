@@ -7,6 +7,7 @@ from open_ai.assistants.query_assistant_from_documents import query_assistant_wi
 import vector.pages
 import vector.interactions
 from visualize.pages import load_confluence_pages_spacial_distribution
+from database.database import get_db_session
 
 
 def answer_question_with_assistant(question):

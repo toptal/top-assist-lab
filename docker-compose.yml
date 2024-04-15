@@ -1,0 +1,23 @@
+version: '3.3'
+services:
+  db:
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_DB: 'top_assist'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    volumes:
+      - chroma-data:/chroma/.chroma/index
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres-data:
+  chroma-data:
