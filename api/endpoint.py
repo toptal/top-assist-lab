@@ -32,11 +32,11 @@ class FeedbackEvent(BaseModel):
 
 
 class EmbedRequest(BaseModel):
-    page_id: int
+    page_id: str
 
 
 class InteractionEmbedRequest(BaseModel):
-    interaction_id: int
+    interaction_id: str
 
 
 @processor.post("/api/v1/questions")

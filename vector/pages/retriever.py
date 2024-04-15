@@ -36,7 +36,7 @@ def retrieve_relevant_ids(question: str, count: int) -> List[int]:
 
     # Extract and return the document IDs from the results
     if 'ids' in similar_items:
-        page_ids = [int(id) for sublist in similar_items['ids'] for id in sublist]
+        page_ids = [id for sublist in similar_items['ids'] for id in sublist]
     else:
         logging.warning("No 'ids' key found in similar_items, no documents retrieved.")
         page_ids = []

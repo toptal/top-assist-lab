@@ -41,7 +41,7 @@ def retrieve_relevant_ids(query: str, count: int) -> List[int]:
 
     # Extract and return the interaction IDs from the results
     if 'ids' in similar_items:
-        interaction_ids = [int(id) for sublist in similar_items['ids'] for id in sublist]
+        interaction_ids = [id for sublist in similar_items['ids'] for id in sublist]
     else:
         logging.warning("No 'ids' key found in similar_items, no interactions retrieved.")
         interaction_ids = []

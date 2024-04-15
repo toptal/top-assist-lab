@@ -1,5 +1,4 @@
-from database.database import Base
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from .base import *
 
 
 class QuizQuestion(Base):

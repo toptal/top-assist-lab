@@ -1,6 +1,4 @@
-from database.database import Base
-from sqlalchemy import Column, Integer, String, Text, DateTime, BigInteger
-import json
+from .base import *
 
 
 class PageData(Base):
@@ -10,7 +8,7 @@ class PageData(Base):
     __tablename__ = 'page_data'
 
     id = Column(Integer, primary_key=True)
-    page_id = Column(BigInteger)
+    page_id = Column(String)
     space_key = Column(String)
     title = Column(String)
     author = Column(String)

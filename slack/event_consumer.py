@@ -93,8 +93,7 @@ class EventConsumer:
                 self.web_client.chat_postMessage(channel=channel_id, text=response_text, thread_ts=message_ts)
                 print(f"\nResponse posted to Slack thread: {message_ts}\n")
             except Exception as e:
-                print(
-                    f"Error registering message as processed, adding to db and responding to the question on slack: {e}")
+                print(f"Error registering message as processed, adding to db and responding to the question on slack: {e}")
 
     def generate_extended_context_query(self, existing_interaction, feedback_text):
         extended_context_query = ""

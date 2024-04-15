@@ -1,6 +1,5 @@
-from database.database import Base
+from .base import *
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Text, DateTime
 
 
 class BookmarkedConversation(Base):

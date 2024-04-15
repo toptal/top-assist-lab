@@ -1,5 +1,4 @@
-from database.database import Base
-from sqlalchemy import Column, Integer, String, DateTime
+from .base import *
 
 
 class SpaceInfo(Base):

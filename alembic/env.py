@@ -3,15 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from configuration import DB_URL
-from database.database import Base
-
-# Import all models to ensure they are registered with the metadata
-from models.page_data import PageData
-from models.bookmarked_conversation import BookmarkedConversation
-from models.qa_interaction import QAInteraction
-from models.quiz_question import QuizQuestion
-from models.space_info import SpaceInfo
-from models.user_score import UserScore
+from models.base import Base
 
 from alembic import context
 
