@@ -13,10 +13,10 @@ def submit_embedding_creation_request(page_id: str):
     post_request(embeds_endpoint, {"page_id": page_id})
 
 
-def generate_missing_embeddings_to_database(session, retry_limit: int = 3, wait_time: int = 5) -> None:
+def generate_missing_embeddings_to_database(retry_limit: int = 3, wait_time: int = 5) -> None:
     for attempt in range(retry_limit):
         # Retrieve the IDs of pages that are still missing embeddings.
-        page_ids = PageManager().get_page_ids_missing_embeds(session)
+        page_ids = PageManager().get_page_ids_missing_embeds()
         # If there are no pages missing embeddings, exit the loop and end the process.
         if not page_ids:
             logging.info("All pages have embeddings. Process complete.")
@@ -34,7 +34,7 @@ def generate_missing_embeddings_to_database(session, retry_limit: int = 3, wait_
 
         # After waiting, retrieve the list of pages still missing embeddings to see if the list has decreased.
         # This retrieval is crucial to ensure that the loop only continues if there are still pages that need processing.
-        if page_ids := PageManager().get_page_ids_missing_embeds(session):
+        if page_ids := PageManager().get_page_ids_missing_embeds():
             logging.info(f"After attempt {attempt + 1}, {len(page_ids)} pages are still missing embeds.")
         else:
             break  # Break out of the loop if there are no more pages missing embeddings.

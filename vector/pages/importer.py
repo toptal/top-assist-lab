@@ -10,8 +10,8 @@ from ..chroma import get_client
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def extract_data(session, space_key):
-    page_ids, _, embeddings = PageManager().get_all_page_data_from_db(session, space_key=space_key)
+def extract_data(space_key):
+    page_ids, _, embeddings = PageManager().get_all_page_data_from_db(space_key=space_key)
 
     # Deserialize the embeddings and filter out None values
     valid_embeddings, valid_page_ids = [], []
@@ -59,12 +59,11 @@ def insert_data(ids, embeddings):
     logging.info(f"Embeddings added to {collection_name} collection.")
 
 
-def import_from_database(session, space_key=None):
+def import_from_database(space_key=None):
     """
     Extracts embeddings from the database and inserts them into the vector database.
     Args:
-        session: The database session.
         space_key (str): The space key for the Confluence space to import data from.
     """
-    ids, embeddings = extract_data(session, space_key)
+    ids, embeddings = extract_data(space_key)
     insert_data(ids, embeddings)

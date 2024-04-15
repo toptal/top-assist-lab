@@ -24,24 +24,25 @@ class ChannelMessageHandler(SlackEventHandler):
 
     def load_processed_data(self):
         """ Load processed messages and questions from the database """
-        try:
-            with get_db_session() as session:
-                interactions = QAInteractionManager(session).get_qa_interactions()
-        except Exception as e:
-            logging.error(f"Error loading processed messages and questions: {e}")
-            interactions = []
-        for interaction in interactions:
-            # Add to processed messages
+        with get_db_session() as session:
             try:
-                self.processed_messages.add(interaction.thread_id)
+                interactions = QAInteractionManager().get_qa_interactions(session)
             except Exception as e:
-                logging.error(f"Error adding processed message to interaction: {e}")
-            # If it's a question, add to questions
-            if interaction.question_text:
+                logging.error(f"Error loading processed messages and questions: {e}")
+                interactions = []
+
+            for interaction in interactions:
+                # Add to processed messages
                 try:
-                    self.questions[interaction.thread_id] = interaction.question_text
+                    self.processed_messages.add(interaction.thread_id)
                 except Exception as e:
-                    logging.error(f"Error adding question to interaction: {e}")
+                    logging.error(f"Error adding processed message to interaction: {e}")
+                # If it's a question, add to questions
+                if interaction.question_text:
+                    try:
+                        self.questions[interaction.thread_id] = interaction.question_text
+                    except Exception as e:
+                        logging.error(f"Error adding question to interaction: {e}")
 
     def is_authorized(self, enterprise_id: str, team_id: str) -> bool:
         """Authorize the request based on the enterprise_id and team_id"""

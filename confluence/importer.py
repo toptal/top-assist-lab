@@ -27,16 +27,15 @@ def tui_choose_space():
     return spaces[choice]['key'], spaces[choice]['name']
 
 
-def import_space(space_key, space_name, session):
-    PageManager().store_pages_data(space_key, retrieve_space(space_key), session)
+def import_space(space_key, space_name):
+    PageManager().store_pages_data(space_key, retrieve_space(space_key))
 
-    vector.pages.generate_missing_embeddings_to_database(session)
+    vector.pages.generate_missing_embeddings_to_database()
 
     upsert_space_info(
-        session,
         space_key=space_key,
         space_name=space_name,
         last_import_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     )
 
-    vector.pages.import_from_database(session, space_key)
+    vector.pages.import_from_database(space_key)

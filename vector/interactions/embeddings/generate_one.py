@@ -52,11 +52,11 @@ def format_interaction(interaction):
 
 def generate_one_embedding_to_database(interaction_id):
     with get_db_session() as session:
-        interaction = QAInteractionManager(session).get_interaction_by_interaction_id(interaction_id)
+        interaction = QAInteractionManager().get_interaction_by_interaction_id(session, interaction_id)
         if interaction:
             formatted_interaction = format_interaction(interaction)
             embed = embed_text(formatted_interaction, model=embedding_model_id)
-            QAInteractionManager(session).add_embed_to_interaction(interaction_id, embed)
+            QAInteractionManager().add_embed_to_interaction(session, interaction_id, embed)
             logging.info(f"Interaction with ID {interaction_id} vectorized and stored in the database.")
         else:
             logging.error(f"No interaction found for ID {interaction_id}")

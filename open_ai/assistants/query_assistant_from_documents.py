@@ -4,6 +4,7 @@ from open_ai.assistants.utility import extract_assistant_response, initiate_clie
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
 from configuration import qa_assistant_id
+from database.database import get_db_session
 import logging
 
 from database.page_manager import PageManager, PageData
@@ -42,7 +43,7 @@ def format_pages_as_context(pages: List[PageData], max_length=30000, truncation_
     return context
 
 
-def query_assistant_with_context(question, page_ids, session, thread_id=None):
+def query_assistant_with_context(question, page_ids, thread_id=None):
     """
     Queries the assistant with a specific question, after setting up the necessary context by adding relevant files.
 
@@ -71,8 +72,9 @@ def query_assistant_with_context(question, page_ids, session, thread_id=None):
     print(f"IDs of pages to load in context : {page_ids}\n")
 
     # Format the context
-    pages = PageManager().find_pages(page_ids, session)
-    context = format_pages_as_context(pages)
+    with get_db_session() as session:
+        pages = PageManager().find_pages(page_ids, session)
+        context = format_pages_as_context(pages)
     print(f"\n\nContext formatted: {context}\n")
 
     # Initialize ThreadManager with or without an existing thread_id

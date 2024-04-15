@@ -10,9 +10,9 @@ from visualize.pages import load_confluence_pages_spacial_distribution
 from database.database import get_db_session
 
 
-def answer_question_with_assistant(question, session):
+def answer_question_with_assistant(question):
     page_ids = vector.pages.retrieve_relevant_ids(question, count=question_context_pages_count)
-    response, thread_id = query_assistant_with_context(question, page_ids, session)
+    response, thread_id = query_assistant_with_context(question, page_ids)
     return response, thread_id
 
 
@@ -45,36 +45,31 @@ def main_menu():
             print("Loading new documentation space...")
             space_key, space_name = tui_choose_space()
             if space_key and space_name:
-                with get_db_session() as session:
-                    import_space(space_key, space_name, session)
+                import_space(space_key, space_name)
             print()
             print(f"Space '{space_name}' retrieval and indexing complete.")
 
         elif choice == "2":
             question = ask_question()
             if question:
-                with get_db_session() as session:
-                    answer, thread_id = answer_question_with_assistant(question, session)
-                    print(f"\nThread ID: {thread_id}\nAnswer: {answer}")
+                answer, thread_id = answer_question_with_assistant(question)
+                print(f"\nThread ID: {thread_id}\nAnswer: {answer}")
 
         elif choice == "3":
             print("Creating vector db for interactions")
-            with get_db_session() as session:
-                vector.interactions.generate_missing_embeddings_to_database(session)
-                vector.interactions.import_from_database(session)
+            vector.interactions.generate_missing_embeddings_to_database()
+            vector.interactions.import_from_database()
 
         elif choice == "4":
             load_manage_assistants()
 
         elif choice == "5":
             context = input("Enter the context you want to identifying knowledge gaps in\nex:(billing reminders): ")
-            with get_db_session() as session:
-                identify_knowledge_gaps(context, session)
+            identify_knowledge_gaps(context)
 
         elif choice == "6":
             print("Starting 3D visualization process...")
-            with get_db_session() as session:
-                load_confluence_pages_spacial_distribution(session)
+            load_confluence_pages_spacial_distribution()
 
         elif choice == "0":
             print("Exiting program.")

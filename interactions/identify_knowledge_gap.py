@@ -9,6 +9,7 @@ from configuration import (
 )
 from database.interaction_manager import QAInteractionManager, QAInteraction
 from database.quiz_question_manager import QuizQuestionManager
+from database.database import get_db_session
 from open_ai.assistants.utility import extract_assistant_response, initiate_client
 from open_ai.assistants.thread_manager import ThreadManager
 from open_ai.assistants.assistant_manager import AssistantManager
@@ -130,7 +131,7 @@ def query_assistant_with_context(context, formatted_interactions, thread_id=None
     return assistant_response, thread_id
 
 
-def process_and_store_questions(assistant_response_json, session):
+def process_and_store_questions(assistant_response_json):
     """
     Processes the JSON response from the assistant, extracts questions, stores them in the database,
     and collects the QuizQuestionDTO objects.
@@ -147,13 +148,11 @@ def process_and_store_questions(assistant_response_json, session):
         logging.error(f"Error decoding JSON: {e}")
         return []
 
-    quiz_question_manager = QuizQuestionManager(session)
-
     quiz_question_dtos = []
     for item in questions_data:
         question_text = item.get("Question")
         if question_text:
-            quiz_question_dto = quiz_question_manager.add_quiz_question(question_text=question_text)
+            quiz_question_dto = QuizQuestionManager().add_quiz_question(question_text=question_text)
             if quiz_question_dto:
                 quiz_question_dtos.append(quiz_question_dto)
     return quiz_question_dtos
@@ -191,17 +190,18 @@ def strip_json(assistant_response: str):
         return "[]"
 
 
-def identify_knowledge_gaps(context, session):
+def identify_knowledge_gaps(context):
     query = f"no information in context: {context}"
     interaction_ids = vector.interactions.retrieve_relevant_ids(query, count=knowledge_gap_interaction_retrieval_count)
-    relevant_qa_interactions = QAInteractionManager(session).get_interactions_by_interaction_ids(interaction_ids)
-    formatted_interactions, user_ids = format_interactions(relevant_qa_interactions)
+    with get_db_session() as session:
+        relevant_qa_interactions = QAInteractionManager().get_interactions_by_interaction_ids(session, interaction_ids)
+        formatted_interactions, user_ids = format_interactions(relevant_qa_interactions)
     assistant_response, thread_ids = query_assistant_with_context(context, formatted_interactions)
     questions_json = strip_json(assistant_response)
-    quiz_question_dtos = process_and_store_questions(questions_json, session)
+    quiz_question_dtos = process_and_store_questions(questions_json)
 
     # Updated to print IDs of stored questions
     print(f"Stored questions with IDs: {[q.id for q in quiz_question_dtos]}")
 
     # Updated function call to match the expected input
-    post_questions_to_slack(session, channel_id=knowledge_gap_discussions_channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)
+    post_questions_to_slack(channel_id=knowledge_gap_discussions_channel_id, quiz_question_dtos=quiz_question_dtos, user_ids=user_ids)
